@@ -1,0 +1,28 @@
+{
+    "name": "dotcoo/zay",
+    "description": "Zay is a PHP and Swoole framework",
+    "type": "library",
+    "license": "proprietary",
+    "keywords": ["PHP", "Swoole", "framework"],
+    "homepage": "https://github.com/dotcoo/zay",
+    "authors": [
+        {
+            "name": "dotcoo zhao",
+            "email": "dotcoo@163.com",
+            "homepage": "http://blog.dotcoo.com",
+            "role": "Developer"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "zay\\": "src/"
+        },
+        "files": [
+            "src/constants.php",
+            "src/helpers.php"
+        ]
+    },
+    "require": {
+        "php": ">=8.1"
+    }
+}
