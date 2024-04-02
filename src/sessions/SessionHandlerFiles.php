@@ -5,9 +5,7 @@ declare(strict_types=1);
 
 namespace zay\sessions;
 
-use SessionHandlerInterface, SessionIdInterface, SessionUpdateTimestampHandlerInterface;
-
-class SessionHandlerFiles implements SessionHandlerInterface, SessionIdInterface, SessionUpdateTimestampHandlerInterface {
+class SessionHandlerFiles implements \SessionHandlerInterface, \SessionIdInterface, \SessionUpdateTimestampHandlerInterface {
 
   public string $save_handler = '';
 

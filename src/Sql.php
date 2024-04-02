@@ -5,14 +5,12 @@ declare(strict_types=1);
 
 namespace zay;
 
-use PDO, PDOStatement, Closure, LogicException, BadMethodCallException;
-
 // Sql sql构造
 // #[AllowDynamicProperties]
 class Sql {
 
   // 默认连接
-  public static ?\PDO $__conn     = null;        // 默认PDO对象
+  public static ?\PDO $__conn      = null;        // 默认PDO对象
   public static string $__host     = '127.0.0.1'; // 默认主机
   public static string $__port     = '330y';      // 默认端口
   public static string $__username = 'root';      // 默认账户
@@ -36,7 +34,7 @@ class Sql {
   protected array $_record = [];
 
   // 连接对象
-  protected ?PDO $_conn = null;
+  protected ?\PDO $_conn = null;
 
   // 数据库名
   protected string $_database = '';
@@ -130,25 +128,25 @@ class Sql {
   }
 
   // 设置数据库连接
-  public function conn(PDO $conn) : static {
+  public function conn(\PDO $conn) : static {
     $this->_conn = $conn;
     return $this;
   }
 
   // 获取数据库连接
-  public function getConn() : PDO {
+  public function getConn() : \PDO {
     if ($this->_conn !== null) { return $this->_conn; }
     if ($this->_model !== null) { $this->_conn = $this->_model->getConn(); }
     if ($this->_conn !== null) { return $this->_conn; }
     if (self::$__conn !== null) { return self::$__conn; }
     $dsn = sprintf("mysql:host=%s:%d;dbname=%s;charset=%s;", self::$__host, self::$__port, self::$__dbname, self::$__charset);
     $options = array(
-        PDO::ATTR_PERSISTENT => true,
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
+        \PDO::ATTR_PERSISTENT => true,
+        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+        \PDO::ATTR_EMULATE_PREPARES => false,
     );
-    return self::$__conn = new PDO($dsn, self::$__username, self::$__password, $options);
+    return self::$__conn = new \PDO($dsn, self::$__username, self::$__password, $options);
   }
 
   // 设置数据库名
@@ -363,10 +361,10 @@ class Sql {
   // 生成 INSERT 语句和参数
   public function toInsert() : array {
     if (empty($this->_cols)) {
-      throw new LogicException('$this->_cols is empty!');
+      throw new \LogicException('$this->_cols is empty!');
     }
     if (empty($this->_colsArgs)) {
-      throw new LogicException('$this->_colsArgs is empty!');
+      throw new \LogicException('$this->_colsArgs is empty!');
     }
     $from     = $this->_from;
     $keywords = empty($this->_keywords)     ? ''  : ' ' . implode(' ', $this->_keywords);
@@ -381,13 +379,13 @@ class Sql {
   // 生成 UPDATE 语句和参数
   public function toUpdate() : array {
     if (empty($this->_sets)) {
-      throw new LogicException('$this->_sets is empty!');
+      throw new \LogicException('$this->_sets is empty!');
     }
     if (empty($this->_setsArgs)) {
-      throw new LogicException('$this->_setsArgs is empty!');
+      throw new \LogicException('$this->_setsArgs is empty!');
     }
     if (empty($this->_wheres)) {
-      throw new LogicException('$this->_wheres is empty!');
+      throw new \LogicException('$this->_wheres is empty!');
     }
     $from     = $this->_from;
     $sets     = implode(', ', $this->_sets);
@@ -405,10 +403,10 @@ class Sql {
   // 生成 REPLACE 语句和参数
   public function toReplace() : array {
     if (empty($this->_sets)) {
-      throw new LogicException('$this->_sets is empty!');
+      throw new \LogicException('$this->_sets is empty!');
     }
     if (empty($this->_setsArgs)) {
-      throw new LogicException('$this->_setsArgs is empty!');
+      throw new \LogicException('$this->_setsArgs is empty!');
     }
     $from     = $this->_from;
     $sets     = implode(', ', $this->_sets);
@@ -420,7 +418,7 @@ class Sql {
   // 生成 DELETE 语句和参数
   public function toDelete() : array {
     if (empty($this->_wheres)) {
-      throw new LogicException('$this->_wheres is empty!');
+      throw new \LogicException('$this->_wheres is empty!');
     }
     $from     = $this->_from;
     $wheres   = empty($this->_wheres)       ? '' : ' WHERE ' . join(' AND ', $this->_wheres);
@@ -438,7 +436,7 @@ class Sql {
   public function whereByPk(mixed ...$ids) : static {
     $pks = $this->getPks();
     if (count($ids) !== count($pks)) {
-      throw new LogicException('$ids and $pks count are not equal!');
+      throw new \LogicException('$ids and $pks count are not equal!');
     }
     foreach ($pks as $i => $pk) {
       $this->_record[$pk] = $ids[$i];
@@ -517,16 +515,16 @@ class Sql {
   }
 
   // sql查询
-  public function query(string $sql, mixed ...$args) : PDOStatement {
+  public function query(string $sql, mixed ...$args) : \PDOStatement {
     if (str_contains($sql, "'") || str_contains($sql, '"')) {
-      throw new LogicException("a ha ha ha ha ha ha ha ha!");
+      throw new \LogicException("a ha ha ha ha ha ha ha ha!");
     }
     log_debug($sql, ...$args);
     $conn = $this->getConn();
     $stmt = $conn->prepare($sql);
     $stmt->_executeResult = $stmt->execute($args);
     $stmt->_lastInsertId = intval($conn->lastInsertId());
-    // $stmt->_lastInsertId = intval(method_exists($stmt, 'lastInsertId') ? $stmt->lastInsertId() : $conn->lastInsertId()); // PDOStatement::lastInsertId is hack
+    // $stmt->_lastInsertId = intval(method_exists($stmt, 'lastInsertId') ? $stmt->lastInsertId() : $conn->lastInsertId()); // \PDOStatement::lastInsertId is hack
     if (property_exists($conn, 'release')) {
       ($conn->release)();
     }
@@ -534,7 +532,7 @@ class Sql {
   }
 
   // 返回查询
-  public function selectStmt() : PDOStatement {
+  public function selectStmt() : \PDOStatement {
     if ($this->_deleteMode === self::MODE_MARK || $this->_deleteMode === self::MODE_MARK_DELETE) {
       $this->where('`deletedTime` is null');
     }
@@ -548,7 +546,7 @@ class Sql {
 
   // 执行查询并返回多条结果
   public function selectAll() : ArrayList {
-    return $this->selectList()->map(fn($v) => $this->_modelClass::mergeRecord($v, false));
+    return $this->selectList()->map(fn($v) => $this->_modelClass::mergeRecord($v));
   }
 
   // 执行查询并返回一条结果
@@ -558,7 +556,7 @@ class Sql {
   }
 
   // 执行插入并返回结果, insertId 是自增 id 的值
-  public function insert(bool $autoIncrement = true) : PDOStatement {
+  public function insert(bool $autoIncrement = true) : \PDOStatement {
     if ($this->_autoTimeColumn) {
       $this->col('createdTime', time())->col('updatedTime', time());
     }
@@ -572,7 +570,7 @@ class Sql {
   }
 
   // 执行更新并返回结果, affected 是影响的行数
-  public function update() : PDOStatement {
+  public function update() : \PDOStatement {
     if ($this->_autoTimeColumn) {
       $this->col('updatedTime', time());
     }
@@ -582,12 +580,12 @@ class Sql {
   }
 
   // 执行替换并返回结果, insertId 是自增 id 的值, affected 是影响的行数
-  public function replace() : PDOStatement {
+  public function replace() : \PDOStatement {
     return $this->query(...$this->toReplace());
   }
 
   // 执行删除并返回结果, affected 是影响的行数
-  public function delete() : PDOStatement {
+  public function delete() : \PDOStatement {
     $stmt = null;
     if ($this->_deleteMode & self::MODE_MARK) {
       $stmt = $this->query(...$this->set('deletedTime', time())->toUpdate());
@@ -672,7 +670,7 @@ class Sql {
     } elseif (str_starts_with($name, 'whereBetween') && $name !== 'whereBetween') {
       return $this->callWhereBetween(lcfirst(substr($name, 12)), ...$args);
     }
-    throw new BadMethodCallException("method Sql::$name not found!");
+    throw new \BadMethodCallException("method Sql::$name not found!");
   }
 
   // 克隆

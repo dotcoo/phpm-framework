@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace zay\traits;
 
-use Closure;
+use zay\interfaces\ModelTreeInterface;
 use zay\ArrayList;
 use zay\Sql;
 
@@ -46,11 +46,11 @@ trait ModelTree {
     return $pids;
   }
 
-  public function isNode(?self $node) : bool {
+  public function isNode(?ModelTreeInterface $node) : bool {
     return $node !== null && $this->getTids() === $node->getTids();
   }
 
-  public function setParent(?self $parent) : static {
+  public function setParent(?ModelTreeInterface $parent) : ModelTreeInterface {
     $this->_tparent = $parent; return $this;
   }
 
@@ -69,7 +69,7 @@ trait ModelTree {
     return $sql;
   }
 
-  public function getParent(string ...$columns) : ?static {
+  public function getParent(string ...$columns) : ?ModelTreeInterface {
     if ($this->_tparent !== false) {
       return $this->_tparent;
     } elseif ($this->tempty($this->getTpids())) {
@@ -81,7 +81,7 @@ trait ModelTree {
     }
   }
 
-  public function isParent(?self $parent) : bool {
+  public function isParent(?ModelTreeInterface $parent) : bool {
     return $parent !== null && $this->getTpids() === $parent->getTids();
   }
 
@@ -94,7 +94,7 @@ trait ModelTree {
     return $parents;
   }
 
-  public function isParents(?self $parent, int $distance = PHP_INT_MAX) : bool {
+  public function isParents(?ModelTreeInterface $parent, int $distance = PHP_INT_MAX) : bool {
     for ($i = 0, $p = $this->getParent(); $i < $distance && $p !== null; $i++) {
       if ($p->isNode($parent)) { return true; }
       $p = $p->getParent();
@@ -102,11 +102,11 @@ trait ModelTree {
     return false;
   }
 
-  public function setChildren(self ...$children) : static {
+  public function setChildren(ModelTreeInterface ...$children) : ModelTreeInterface {
     $this->_children === new ArrayList($children); return $this;
   }
 
-  public function appendChild(self ...$children) : static {
+  public function appendChild(ModelTreeInterface ...$children) : ModelTreeInterface {
     $this->getChildren()->push(...$children); return $this;
   }
 
@@ -138,7 +138,7 @@ trait ModelTree {
     return $count;
   }
 
-  public function isDescendants(self $node, bool $self = false, int $distance = PHP_INT_MAX) : bool {
+  public function isDescendants(ModelTreeInterface $node, bool $self = false, int $distance = PHP_INT_MAX) : bool {
     --$distance;
     if ($self && $this->isNode($node)) { return true; }
     foreach ($this->getChildren() as $c) {
@@ -169,7 +169,7 @@ trait ModelTree {
     return $count;
   }
 
-  public function each(Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : static {
+  public function each(\Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : ModelTreeInterface {
     --$distance;
     if ($self) { $func($this); }
     foreach ($this->getChildren() as $c) {
@@ -179,7 +179,7 @@ trait ModelTree {
     return $this;
   }
 
-  public function eachReverse(Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : static {
+  public function eachReverse(\Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : ModelTreeInterface {
     --$distance;
     foreach ($this->getChildren()->reverse() as $c) {
       if ($distance !== 0) { $c->eachReverse($func, false, $distance); }
@@ -189,7 +189,7 @@ trait ModelTree {
     return $this;
   }
 
-  public function map(Closure $func, bool $self = true, int $distance = PHP_INT_MAX) : array {
+  public function map(\Closure $func, bool $self = true, int $distance = PHP_INT_MAX) : array {
     --$distance;
     $children = [];
     foreach ($this->getChildren() as $c) {
@@ -198,11 +198,11 @@ trait ModelTree {
     return $self ? $func($this, $children) : $children;
   }
 
-  public static function getTree(ArrayList $list = null) : static {
+  public static function getTree(ArrayList $list = null) : ModelTreeInterface {
     return static::root()->parseTree($list ?? static::order('`ord` DESC')->selectAll());
   }
 
-  public function parseTree(?ArrayList $list, $detach = true) : static {
+  public function parseTree(?ArrayList $list, $detach = true) : ModelTreeInterface {
     $this->_tparent = null;
     $this->_children = new ArrayList();
     $this->_list = new ArrayList();
@@ -221,7 +221,7 @@ trait ModelTree {
     return $root->parseLevel()->detach($detach);
   }
 
-  public function showChildren() : static {
+  public function showChildren() : ModelTreeInterface {
     $this->___props['children'] = $this->_children;
     foreach ($this->_children as $c) {
       $c->showChildren();
@@ -229,19 +229,19 @@ trait ModelTree {
     return $this;
   }
 
-  public function parseLevel() : static {
+  public function parseLevel() : ModelTreeInterface {
     return $this->each(fn($v) => $v->_tlevel = $v->getParent()->_tlevel + 1);
   }
 
-  public function findTree(Closure $func, $defval = null) : ?static {
+  public function findTree(\Closure $func, $defval = null) : ?ModelTreeInterface {
     return $this->_list->find($func, $defval);
   }
 
-  public function findNode(int $id, $defval = null) : static {
+  public function findNode(int $id, $defval = null) : ModelTreeInterface {
     return $this->_list->find(fn($v) => $v->getTids()[0] === $id, $defval);
   }
 
-  public function detach(bool $detach = true) : static {
+  public function detach(bool $detach = true) : ModelTreeInterface {
     $this->_detach = $detach;
     $this->getChildren()->each(fn($v) => $v->setParent($detach ? null : $this));
     return $this;
@@ -264,14 +264,14 @@ trait ModelTree {
     $this->ignoreChange()->parseTree($data['_list'], $data['_detach']);
   }
 
-  public function addTop(array $top = []) : static {
+  public function addRoot(array $top = []) : ModelTreeInterface {
     $node = static::new(array_merge($top, ['id' => 0, 'pid' => -1, 'name' => 'ROOT']));
     $this->list->unshift($node);
     $this->getChildren()->unshift($node);
     return $this;
   }
 
-  public static function root(array $root = []) : static {
+  public static function root(array $root = []) : ModelTreeInterface {
     return static::new(array_merge($root, ['id' => 0, 'pid' => -1, 'name' => 'ROOT']));
   }
 }

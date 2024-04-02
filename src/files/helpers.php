@@ -112,14 +112,14 @@ function action2viewSource(string $action) : string {
   static $caches = [];
   if (array_key_exists($action, $caches)) { return $caches[$action]; }
   [$module, $controller, $method] = explode('.', $action);
-  return $caches[$action] = APP_SRC.'/modules/'.$module.'/views/'.camel2under($controller).'/'.camel2under($method).'.view.php';
+  return $caches[$action] = APP_SRC.'modules/'.$module.'/views/'.camel2under($controller).'/'.camel2under($method).'.view.php';
 }
 
 function action2viewTarget(string $action) : string {
   static $caches = [];
   if (array_key_exists($action, $caches)) { return $caches[$action]; }
   [$module, $controller, $method] = explode('.', $action);
-  return $caches[$action] = APP_VIEW.'/'.$module.'/'.camel2under($controller).'/'.camel2under($method).'.swoole.php';
+  return $caches[$action] = APP_VIEW.$module.'/'.camel2under($controller).'/'.camel2under($method).'.swoole.php';
 }
 
 function html(string $html) : string {
@@ -162,24 +162,24 @@ function json_encode_any(mixed $value) : string {
   return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
 
-function json_decode_any(string $value) : mixed {
-  return json_decode($value, true);
+function json_decode_any(?string $value) : mixed {
+  return json_decode($value ?? '', true);
 }
 
 function json_encode_array(mixed $value) : string {
   return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
 
-function json_decode_array(string $value) : mixed {
-  return json_decode($value, true);
+function json_decode_array(?string $value) : mixed {
+  return json_decode($value ?? '', true);
 }
 
 function json_encode_object(mixed $value) : string {
   return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | (is_array($value) && empty($value) ? JSON_FORCE_OBJECT : 0));
 }
 
-function json_decode_object(mixed $value) : mixed {
-  return json_decode($value, true);
+function json_decode_mixed(?string $value) : mixed {
+  return json_decode($value ?? '', true);
 }
 
 // 日志参数
@@ -260,7 +260,7 @@ function mkdir2(string $filename) : string {
 
 // 随机字符串
 function str_rand(int $len = 12, int $slen = 0, string $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', string $schars='~!@#$%^&*()_+`{}|[]\\:";\'<>,.?/') : string {
-  if ($len < $slen) { throw new \LogicException('str_rand: len < slen'); }
+  if ($len < $slen) { throw new \UnexpectedValueException('str_rand: len < slen'); }
   $strs = [];
   for ($chars = str_split($chars), $charsLen = count($chars), $schars = str_split($schars), $scharsLen = count($schars), $i = 0; $i < $len; $i++) {
     $strs[] = $chars[random_int(0, $charsLen - 1)];
@@ -516,7 +516,6 @@ function imagecut(string $file, int $new_w = 200, int $new_h = 200, int $pos = 0
   return $data;
 }
 
-
 function isColorful(int $r, int $g, int $b, int $diff = 160) : bool {
   return max(abs($r - $b), abs($g - $r), abs($b - $g)) >= $diff;
 }
@@ -571,6 +570,53 @@ function tinyflake(?int $time = null) : int {
   return (($t - 1704067200) << 21) + ($r++ & 0x1FFFFF);
 };
 
+function setting_get(string $name, mixed $defval = null) : mixed {
+  return \app\models\SystemSetting::whereByKey($name)->select()?->content ?? $defval;
+}
+
+function opcache_clear_cache(string $file) : string {
+  if (function_exists('opcache_is_script_cached') && opcache_is_script_cached($file)) { opcache_invalidate($file, true); }
+  return $file;
+}
+
+function data_action(string $action = '', mixed $name = '', mixed $val = null, string $code = '') : mixed {
+  static $caches = [];
+  if (APP_SWOOLE) {
+    switch($action) {
+      case 'set': return $caches[$name] = $val;
+      case 'get': return $caches[$name] ?? $val;
+      case 'del': unset($caches[$name]); return null;
+      case 'has': return array_key_exists($name, $caches);
+      default: return null;
+    }
+  } else {
+    $file = APP_DATA . $name . '.php';
+    switch($action) {
+      case 'set': $caches[$name] = $val; file_put_contents(opcache_clear_cache(mkdir2($file)), $code ?: "<?php\nreturn ".var_state($val).";\n"); return $val;
+      case 'get': return array_key_exists($name, $caches) ? $caches[$name] : (file_exists($file) ? $caches[$name] = require($file) : $val);
+      case 'del': unset($caches[$name]); file_exists($file) && unlink(opcache_clear_cache($file)); return null;
+      case 'has': return array_key_exists($name, $caches) ? true : (file_exists($file) ? true : false);
+      default: return null;
+    }
+  }
+}
+
+function data_set(string $name, mixed $val = null, string $code = '') : mixed {
+  return data_action('set', $name, $val, $code);
+}
+
+function data_get(string $name, mixed $defval = null) : mixed {
+  return data_action('get', $name, $defval);
+}
+
+function data_del(string $name) : mixed {
+  return data_action('del', $name);
+}
+
+function data_has(string $name) : bool {
+  return data_action('has', $name);
+}
+
 function var_state(mixed $data, int $indent = 0) : string {
   switch (gettype($data)) {
     case 'boolean':
@@ -579,28 +625,28 @@ function var_state(mixed $data, int $indent = 0) : string {
     case 'double':
       return $data . '';
     case 'string':
-      return json_encode_string($data);
+      return json_encode_any($data);
     case 'array':
       $code = "[\n";
       foreach ($data as $key => $val) {
-        $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_string($key), var_state($val, $indent + 1));
+        $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_any($key), var_state($val, $indent + 1));
       }
       $code .= str_repeat('  ', $indent) . "]";
       return $code;
     case 'object':
-      if (is_subclass_of($data, \zay\interfaces\CoderInterface::class)) {
+      if (is_subclass_of($data, \zay\interfaces\StateInterface::class)) {
         $code = $data::class . "::__setState([\n";
         foreach ($data->__getState() as $key => $val) {
-          $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_string($key), var_state($val, $indent + 1));
+          $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_any($key), var_state($val, $indent + 1));
         }
         $code .= str_repeat('  ', $indent) . "])";
         return $code;
       } else {
-        $code = $data::class . "::__setState([\n";
+        $code = "[\n";
         foreach ($data->__getState() as $key => $val) {
-          $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_string($key), var_state($val, $indent + 1));
+          $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_any($key), var_state($val, $indent + 1));
         }
-        $code .= str_repeat('  ', $indent) . "])";
+        $code .= str_repeat('  ', $indent) . "]";
         return $code;
       }
     case 'NULL':

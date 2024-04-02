@@ -8,7 +8,6 @@ namespace zay;
 use zay\exceptions\VerifyException;
 use zay\exceptions\ResponseEndException;
 use zay\sessions\SessionHandlerFiles;
-
 use zay\traits\Singleton;
 
 final class App {
@@ -91,7 +90,7 @@ final class App {
       (new $controllerClass())->$methodName($request, $response);
     } catch (ResponseEndException $e) {
     } catch (Exception $e) {
-      $response->json(APP_DEBUG ? ['errno' => $e->getCode(), 'errmsg' => $e->getMessage(), 'errcolumn' => $e->getErrorColumn(), 'errfile' => $e->getErrorFile(), 'errline' => $e->getErrorLine()] : ['errno' => $e->getCode(), 'errmsg' => $e->getMessage(), 'errcolumn' => $e->getErrorColumn()]);
+      $response->write(json_encode_array(APP_DEBUG ? ['errno' => $e->getCode(), 'errmsg' => $e->getMessage(), 'errcolumn' => $e->getErrorColumn(), 'errfile' => $e->getErrorFile(), 'errline' => $e->getErrorLine()] : ['errno' => $e->getCode(), 'errmsg' => $e->getMessage(), 'errcolumn' => $e->getErrorColumn()]));
     }
     $response->sendResponse();
     return $this;

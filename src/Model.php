@@ -5,13 +5,12 @@ declare(strict_types=1);
 
 namespace zay;
 
-use ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, PDO, PDOStatement, LogicException, BadMethodCallException;
 use zay\interfaces\EventCenterInterface;
 use zay\interfaces\StateInterface;
 use zay\traits\Dynamic;
 use zay\traits\EventCenter;
 
-abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, EventCenterInterface, StateInterface {
+abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \Serializable, \JsonSerializable, EventCenterInterface, StateInterface {
 
   use Dynamic;
   use EventCenter;
@@ -74,7 +73,7 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   }
 
   // 返回当前实体对象的数据库连接对象
-  public function getConn() : ?PDO {
+  public function getConn() : ?\PDO {
     return null;
   }
 
@@ -120,17 +119,17 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   }
 
   // 添加数据
-  public function add(string ...$columns) : PDOStatement {
+  public function add(string ...$columns) : \PDOStatement {
     return $this->___add(true, ...$columns);
   }
 
   // 添加数据
-  public function addNotAutoIncrement(string ...$columns) : PDOStatement {
+  public function addNotAutoIncrement(string ...$columns) : \PDOStatement {
     return $this->___add(false, ...$columns);
   }
 
   // 添加数据
-  protected function ___add(bool $autoIncrement, string ...$columns) : PDOStatement {
+  protected function ___add(bool $autoIncrement, string ...$columns) : \PDOStatement {
     // $this->dispatchEvent('beforeInsert');
     $columns = !empty($columns) ? $columns : array_keys($this->___changes);
     $retval = $this->newSqlAlias()->cols(...$columns)->insert($autoIncrement);
@@ -140,17 +139,17 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   }
 
   // 编辑数据
-  public function edit(string ...$columns) : PDOStatement {
+  public function edit(string ...$columns) : \PDOStatement {
     return $this->___edit(false, ...$columns);
   }
 
   // 编辑数据
-  public function editIncludePk(string ...$columns) : PDOStatement {
+  public function editIncludePk(string ...$columns) : \PDOStatement {
     return $this->___edit(true, ...$columns);
   }
 
   // 编辑数据
-  protected function ___edit(bool $includePk, string ...$columns) : PDOStatement {
+  protected function ___edit(bool $includePk, string ...$columns) : \PDOStatement {
     // $this->dispatchEvent('beforeUpdate');
     $columns = !empty($columns) ? $columns : array_keys($this->___changes);
     if (!$includePk) { $columns = array_diff($columns, $this->getPks()); }
@@ -161,7 +160,7 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   }
 
   // 根据数据中的id, 删除数据
-  public function del() : PDOStatement {
+  public function del() : \PDOStatement {
     // $this->dispatchEvent('beforeDelete');
     $retval = $this->newSqlAlias()->whereById()->delete();
     $this->ignoreChange();
@@ -170,7 +169,7 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   }
 
   // 保存数据
-  public function save(string ...$columns) : PDOStatement {
+  public function save(string ...$columns) : \PDOStatement {
     // $this->dispatchEvent('beforeSave');
     $retval = $this->exists() ? $this->edit(...$columns) : $this->add(...$columns);
     // $this->dispatchEvent('afterSave');
@@ -256,8 +255,8 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   //     return $this->callFindBy($name, ...$args);
   //   } else {
   //     $err = null;
-  //     try { return $this->___call($name, $args); } catch (BadMethodCallException $e) { $err = $e; }
-  //     try { return $this->newSqlAlias()->$name(...$args); } catch (BadMethodCallException $e) {}
+  //     try { return $this->___call($name, $args); } catch (\BadMethodCallException $e) { $err = $e; }
+  //     try { return $this->newSqlAlias()->$name(...$args); } catch (\BadMethodCallException $e) {}
   //     throw $err;
   //   }
   // }
@@ -267,9 +266,9 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
     if (str_starts_with($name, 'findBy') && $name !== 'findBy') {
       return $this->callFindBy($name, ...$args);
     } else {
-    $err = null;
-      try { return $this->___call($name, $args); } catch (BadMethodCallException $e) { $err = $e; }
-      try { return $this->newSqlAlias()->$name(...$args); } catch (BadMethodCallException $e) {}
+      $err = null;
+      try { return $this->___call($name, $args); } catch (\BadMethodCallException $e) { $err = $e; }
+      try { return $this->newSqlAlias()->$name(...$args); } catch (\BadMethodCallException $e) {}
       throw $err;
     }
   }

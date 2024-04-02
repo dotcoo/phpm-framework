@@ -5,8 +5,6 @@ declare(strict_types=1);
 
 namespace zay;
 
-use PDOStatement, LogicException;
-
 // Sql sql构造
 class SqlCache extends Sql {
   public function cacheTableKey() : string {
@@ -26,15 +24,15 @@ class SqlCache extends Sql {
 
   public function refershTableCache(mixed $retval = null) : mixed {
     $key = $this->cacheTableKey();
-    $val = $this->getModel()->newSql(false)->selectList();
+    $val = $this->getModel()->newSql(false)->selectAll();
     data_set($key, $val);
-    if ($this->_modelClass !== '') { $this->_model->dispatchEvent('tableUpdate'); }
+    // if ($this->_modelClass !== '') { $this->_model->dispatchEvent('tableUpdate'); }
     return $retval ?? $val;
   }
 
   // 执行查询并返回多条结果
   public function selectList() : ArrayList {
-    $list = $this->getTableCache();
+    $list = $this->getTableCache()->map(fn($v) => $v->toArray());
     if (!empty($this->_wheres)) {
       $wheres = $this->_wheres;
       $wheresArgs = $this->_wheresArgs;
@@ -70,7 +68,7 @@ class SqlCache extends Sql {
           $arg = array_shift($wheresArgs);
           $list = $list->filter(fn($v) => $v[$m[1]] == $arg || str_contains($v[$m[2]], $arg));
         } else {
-          throw new LogicException("unsupported where syntax: \"$where\"");
+          throw new \LogicException("unsupported where syntax: \"$where\"");
         }
       }
     }
@@ -83,7 +81,7 @@ class SqlCache extends Sql {
           } elseif (preg_match('/`(\w+)` ASC/', $order, $m) || preg_match('/`(\w+)`/', $order, $m)) {
             $v = $a[$m[1]] <=> $b[$m[1]];
           } else {
-            throw new LogicException('unsupported order syntax');
+            throw new \LogicException('unsupported order syntax');
           }
           if ($v !== 0) {
             return $v;
@@ -112,27 +110,27 @@ class SqlCache extends Sql {
   }
 
   // 执行插入并返回结果, insertId 是自增 id 的值
-  public function insert(bool $autoIncrement = true) : PDOStatement {
+  public function insert(bool $autoIncrement = true) : \PDOStatement {
     return $this->refershTableCache(parent::insert($autoIncrement));
   }
 
   // 执行更新并返回结果, affected 是影响的行数
-  public function update() : PDOStatement {
+  public function update() : \PDOStatement {
     return $this->refershTableCache(parent::update());
   }
 
   // 执行替换并返回结果, insertId 是自增 id 的值, affected 是影响的行数
-  public function replace() : PDOStatement {
+  public function replace() : \PDOStatement {
     return $this->refershTableCache(parent::replace());
   }
 
   // 执行删除并返回结果, affected 是影响的行数
-  public function delete() : PDOStatement {
+  public function delete() : \PDOStatement {
     return $this->refershTableCache(parent::delete());
   }
 
   // 统计总行数
   public function count() : int {
-    return $this->countSql()->selectList()->count();
+    return $this->countSql()->selectAll()->count();
   }
 }

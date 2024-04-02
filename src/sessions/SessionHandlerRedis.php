@@ -5,9 +5,7 @@ declare(strict_types=1);
 
 namespace zay\sessions;
 
-use SessionHandlerInterface, SessionIdInterface, SessionUpdateTimestampHandlerInterface, Redis;
-
-class SessionHandlerRedis implements SessionHandlerInterface, SessionIdInterface, SessionUpdateTimestampHandlerInterface {
+class SessionHandlerRedis implements \SessionHandlerInterface, \SessionIdInterface, \SessionUpdateTimestampHandlerInterface {
 
   public string $save_handler = '';
 
@@ -32,7 +30,7 @@ class SessionHandlerRedis implements SessionHandlerInterface, SessionIdInterface
     return bin2hex(random_bytes(30));
   }
 
-  public function redis() : Redis {
+  public function redis() : \Redis {
     // TODO 连接池
     $paths = explode(',', $this->save_path);
     $path = $paths[0];
@@ -40,7 +38,7 @@ class SessionHandlerRedis implements SessionHandlerInterface, SessionIdInterface
     $url = array_merge(['host' => '127.0.0.1', 'port' => '6379', 'query' => ''], parse_url($path));
     parse_str($url['query'] ?? '', $query);
     $query = array_merge(['weight' => 1, 'timeout' => 0, 'persistent' => 0, 'prefix' => 'PHPREDIS_SESSION', 'auth' => '', 'database' => '0'], $query);
-    $redis = new Redis();
+    $redis = new \Redis();
     // TODO 暂时不支持持久连技
     // $query['persistent'] ? $redis->pconnect($url['host'], $url['port'], $query['timeout']) : $redis->connect($url['host'], $url['port'], $query['timeout']);
     $redis->connect($url['host'], $url['port'], $query['timeout']);

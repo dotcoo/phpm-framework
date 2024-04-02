@@ -5,16 +5,14 @@ declare(strict_types=1);
 
 namespace zay;
 
-use Throwable, LogicException;
-
-class Exception extends LogicException {
+class Exception extends \LogicException {
   protected string $errorFile = '';
 
   protected int $errorLine = 0;
 
   protected string $errorColumn = '';
 
-  public function __construct(string $message = '', int $code = 1, $depth = 0, $column = '', Throwable $previous = null) {
+  public function __construct(string $message = '', int $code = 1, $depth = 0, $column = '', \Throwable $previous = null) {
     parent::__construct($message, $code, $previous);
     $stack = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, $depth + 1)[$depth];
     $this->errorFile = $stack['file'];

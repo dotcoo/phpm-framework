@@ -5,10 +5,9 @@ declare(strict_types=1);
 
 namespace zay;
 
-use ArrayAccess, Countable, Serializable, IteratorAggregate, ArrayIterator, Traversable, JsonSerializable, Closure, SplQueue;
 use zay\interfaces\StateInterface;
 
-final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorAggregate, JsonSerializable, StateInterface {
+final class ArrayList implements \ArrayAccess, \Countable, \IteratorAggregate, \Serializable, \JsonSerializable, StateInterface {
   public static function isArrayList(mixed $obj) : bool {
     return is_a($obj, static::class);
   }
@@ -51,8 +50,8 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return count($this->___data);
   }
 
-  public function getIterator() : Traversable {
-    return new ArrayIterator($this->___data);
+  public function getIterator() : \Traversable {
+    return new \ArrayIterator($this->___data);
   }
 
   public function serialize() : ?string {
@@ -123,7 +122,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return new static(array_splice($this->___data, $offset, $deleteCount === null ? $this->count() : $deleteCount, $args));
   }
 
-  public function sort(Closure $callback) : static {
+  public function sort(\Closure $callback) : static {
     usort($this->___data, $callback); return $this;
   }
 
@@ -179,7 +178,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     }
   }
 
-  public function reduce(Closure $callback, mixed $initial = 0) : mixed {
+  public function reduce(\Closure $callback, mixed $initial = 0) : mixed {
     // return array_reduce($this->___data, $callback, $initial);
     $a = $initial;
     foreach ($this->___data as $i => $v) {
@@ -188,7 +187,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return $a;
   }
 
-  public function reduceRight(Closure $callback, mixed $initial = 0) : mixed {
+  public function reduceRight(\Closure $callback, mixed $initial = 0) : mixed {
     // return array_reduce(array_reverse($this->___data), $callback, $initial);
     $a = $initial;
     foreach (array_reverse($this->___data) as $i => $v) {
@@ -199,7 +198,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
 
   // ====== foreach ======
 
-  public function find(Closure $callback, mixed $defval = null) : mixed {
+  public function find(\Closure $callback, mixed $defval = null) : mixed {
     foreach ($this->___data as $i => $v) {
       if ($callback($v, $i, $this->___data)) {
         return $v;
@@ -208,7 +207,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return $defval;
   }
 
-  public function findIndex(Closure $callback) : int {
+  public function findIndex(\Closure $callback) : int {
     foreach ($this->___data as $i => $v) {
       if ($callback($v, $i, $this->___data)) {
         return $i;
@@ -217,7 +216,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return -1;
   }
 
-  public function every(Closure $callback) : bool {
+  public function every(\Closure $callback) : bool {
     foreach ($this->___data as $i => $v) {
       if (!$callback($v, $i, $this->___data)) {
         return false;
@@ -226,7 +225,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return true;
   }
 
-  public function some(Closure $callback) : bool {
+  public function some(\Closure $callback) : bool {
     foreach ($this->___data as $i => $v) {
       if ($callback($v, $i, $this->___data)) {
         return true;
@@ -235,7 +234,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return false;
   }
 
-  public function each(Closure $callback) : static {
+  public function each(\Closure $callback) : static {
     foreach ($this->___data as $i => &$v) {
       $callback($v, $i, $this->___data);
     }
@@ -243,7 +242,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return $this;
   }
 
-  public function map(Closure $callback) : static {
+  public function map(\Closure $callback) : static {
     $l = new static();
     foreach ($this->___data as $i => $v) {
       $l->push($callback($v, $i, $this->___data));
@@ -251,7 +250,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return $l;
   }
 
-  public function filter(Closure $callback) : static {
+  public function filter(\Closure $callback) : static {
     $l = new static();
     foreach ($this->___data as $i => $v) {
       if ($callback($v, $i, $this->___data)) {
@@ -263,7 +262,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
 
   public function flat() {
     $list = [];
-    $stacks = new SplQueue();
+    $stacks = new \SplQueue();
     $stacks->enqueue([$this->___data, 0]);
     while (!$stacks->isEmpty()) {
       [$arr, $i] = $stacks->dequeue();
@@ -281,7 +280,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return $list;
   }
 
-  public function relations(string|Closure $prop, string|Closure $fk, string|Closure $class, string $pk = 'id', string ...$columns) : static {
+  public function relations(string|\Closure $prop, string|\Closure $fk, string|\Closure $class, string $pk = 'id', string ...$columns) : static {
     if ($this->empty()) { return $this; }
     $setProp = gettype($prop) == 'string' ? fn($v, $obj) => $v->$prop = $obj : $prop;
     $getFk = gettype($fk) == 'string' ? fn($v) => $v->$fk : $fk;
@@ -296,7 +295,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
 
   // ====== array ======
 
-  public function toColumn(Closure $callback) : array {
+  public function toColumn(\Closure $callback) : array {
     $map = [];
     foreach ($this->___data as $i => $v) {
       $map[] = $callback($v, $i, $this->___data);
@@ -304,7 +303,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return $map;
   }
 
-  public function toMap(Closure $callback) : array {
+  public function toMap(\Closure $callback) : array {
     $map = [];
     foreach ($this->___data as $i => $v) {
       [$key, $val] = $callback($v, $i, $this->___data);
@@ -313,7 +312,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return $map;
   }
 
-  public function toGroup(Closure $callback) : array {
+  public function toGroup(\Closure $callback) : array {
     $map = [];
     foreach ($this->___data as $i => $v) {
       [$key, $val] = $callback($v, $i, $this->___data);
@@ -356,7 +355,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return $tree;
   }
 
-  public function eachTree(Closure $callback) : static {
+  public function eachTree(\Closure $callback) : static {
     foreach ($this->___data as $i => $v) {
       $callback($v, $i, $this->___data);
       $v->children = $v->children ? $v->children : new static();
@@ -365,7 +364,7 @@ final class ArrayList implements ArrayAccess, Countable, Serializable, IteratorA
     return this;
   }
 
-  public function mapTree(Closure $callback) : static {
+  public function mapTree(\Closure $callback) : static {
     $tree = new static();
     foreach ($this->___data as $i => $v) {
       $v = $callback($v, $i, $this->___data);

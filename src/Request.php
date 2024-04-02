@@ -12,7 +12,7 @@ use zay\exceptions\NotFoundException;
 use zay\exceptions\VerifyException;
 
 // Request 请求
-final class Request {
+final class Request implements EventCenterInterface {
 
   use Dynamic;
   use EventCenter;

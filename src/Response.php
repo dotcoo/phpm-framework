@@ -129,7 +129,7 @@ final class Response implements EventCenterInterface {
     throw new ResponseEndException('response end');
   }
 
-  public function json(array $data) : void {
+  public function json(mixed $data) : void {
     $this->end(json_encode_array($data));
   }
 

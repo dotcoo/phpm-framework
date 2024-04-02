@@ -5,7 +5,6 @@ declare(strict_types=1);
 
 namespace zay;
 
-use Closure;
 use zay\exceptions\ViewException;
 
 final class View {
@@ -14,17 +13,15 @@ final class View {
 
   public static function compile(string $source, string $target) : void {
     $code = file_get_contents($source);
-    $code = preg_replace('/\\r+/',         '',              $code);
-    $code = substr(preg_replace_callback('/\?>(.*?)<\?/ms', fn(array $m) => str_replace('\'', '\\\'', $m[0]), "?>$code<?"), 2, -2);
-    // $code = preg_replace('/\'/',           '\\\'',          $code);
-    /*$code = preg_replace('/<\?php require "(.+?)"; \?>/', '\' . (require \zay\View::compileSwoole("'.pathinfo($source, PATHINFO_DIRNAME).'/$1")) . \'', $code);*/
-    $code = preg_replace('/<\?=render\((.*), .+?\)\?>/', '\' . htmlspecialchars(strval($1)) . \'', $code);
-    $code = preg_replace('/<\?=render(.+?)\?>/', '\' . htmlspecialchars(strval($1)) . \'', $code);
-    $code = preg_replace('/<\?=(.+?)\?>/', '\' . htmlspecialchars(strval($1)) . \'', $code);
-    $code = preg_replace_callback('/htmlspecialchars\(strval(\(.+?)\)\);/', Closure::fromCallable([static::class, 'variables_callback']), $code);
-    $code = preg_replace('/\\n{2,}/',      "\n",            $code);
-    $code = preg_replace('/\n?\s*<\?php/', '\';',           $code);
-    $code = preg_replace('/\?>\s*\n?/',    '$___html .= \'', $code);
+    $code = preg_replace('/\\r+/',                                          '',                                                             $code);
+    $code = preg_replace('/\\n+/',                                          "\n",                                                           $code);
+    $code = substr(preg_replace_callback('/\?>(.*?)<\?/ms',                 fn(array $m) => str_replace('\'', '\\\'', $m[0]), "?>$code<?"), 2, -2);
+    $code = preg_replace('/<\?=render\([\'"](.+?)[\'"]\)\?>/',            '\' . \\zay\\View::render($___data, \'\1\') . \'',              $code);
+    $code = preg_replace('/<\?=render\((.+?)\)\?>/',                        '\' . \\zay\\View::render(\1) . \'',                            $code);
+    $code = preg_replace('/<\?=(.+?)\?>/',                                  '\' . htmlspecialchars(strval($1)) . \'',                       $code);
+    $code = preg_replace_callback('/htmlspecialchars\(strval(\(.+?)\)\);/', \Closure::fromCallable([static::class, 'variables_callback']),  $code);
+    $code = preg_replace('/\n?\s*<\?php/',                                  '\';',                                                          $code);
+    $code = preg_replace('/\?>\s*\n?/',                                     '$___html .= \'',                                               $code);
     file_put_contents(mkdir2($target), "<?php\nreturn function(array \$___data) : string {\nextract(\$___data);\n\$___html = '$code';\nreturn \$___html;\n};\n");
   }
 

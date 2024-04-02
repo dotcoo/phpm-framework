@@ -5,17 +5,15 @@ declare(strict_types=1);
 
 namespace zay\traits;
 
-use Closure;
-
 trait EventCenter {
   protected static array $___classEvents = [];
 
-  public static function addClassEventListener(string $name, Closure $handle) : void {
+  public static function addClassEventListener(string $name, \Closure $handle) : void {
     if (!array_key_exists($name, static::$___classEvents)) { static::$___classEvents[$name] = []; }
     static::$___classEvents[$name][] = $handle;
   }
 
-  public static function removeClassEventListener(string $name, Closure $handle) : void {
+  public static function removeClassEventListener(string $name, \Closure $handle) : void {
     if (!array_key_exists($name, static::$___classEvents)) { return; }
     static::$___classEvents[$name] = array_filter(fn($v) => $v !== $handle, static::$___classEvents[$name]);
   }
@@ -32,13 +30,13 @@ trait EventCenter {
 
   protected array $___events = [];
 
-  public function addEventListener(string $name, Closure $handle) : static {
+  public function addEventListener(string $name, \Closure $handle) : static {
     if (!array_key_exists($name, $this->___events)) { $this->___events[$name] = []; }
     $this->___events[$name][] = $handle;
     return $this;
   }
 
-  public function removeEventListener(string $name, Closure $handle) : static {
+  public function removeEventListener(string $name, \Closure $handle) : static {
     if (!array_key_exists($name, $this->___events)) { return $this; }
     $this->___events[$name] = array_filter(fn($v) => $v !== $handle, $this->___events[$name]);
     return $this;

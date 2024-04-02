@@ -5,12 +5,10 @@ declare(strict_types=1);
 
 namespace zay\traits;
 
-use Closure, Traversable, ArrayIterator;
-
 trait Dynamic {
   protected static array $___classMethods = [];
 
-  public static function setClassMethod(string $name, Closure $value) : void {
+  public static function setClassMethod(string $name, \Closure $value) : void {
     static::$___classMethods[$name] = $value;
   }
 
@@ -32,7 +30,7 @@ trait Dynamic {
 
   protected static array $___objectMethods = [];
 
-  public static function setObjectMethod(string $name, Closure $value) : void {
+  public static function setObjectMethod(string $name, \Closure $value) : void {
     static::$___objectMethods[$name] = $value;
   }
 
@@ -45,7 +43,7 @@ trait Dynamic {
   public array $___methods = [];
 
   public function ___set(string $name, mixed $value) : void {
-    if ($value instanceof Closure) { $this->___methods[$name] = $value; return; }
+    if ($value instanceof \Closure) { $this->___methods[$name] = $value; return; }
     $setMethodName = 'set' . camel2pascal($name);
     if (method_exists($this, $setMethodName)) {
       $this->$setMethodName($value);
@@ -133,8 +131,8 @@ trait Dynamic {
     return count($this->___props);
   }
 
-  public function getIterator() : Traversable {
-    return new ArrayIterator($this->___props);
+  public function getIterator() : \Traversable {
+    return new \ArrayIterator($this->___props);
   }
 
   public function serialize() : ?string {
