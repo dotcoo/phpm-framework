@@ -18,8 +18,9 @@
             "zay\\": "src/"
         },
         "files": [
-            "src/constants.php",
-            "src/helpers.php"
+            "src/files/constants.php",
+            "src/files/helpers.php",
+            "src/files/alias.php"
         ]
     },
     "require": {
