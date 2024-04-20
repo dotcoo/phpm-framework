@@ -8,17 +8,6 @@ namespace zay;
 // Sql sql构造
 // #[AllowDynamicProperties]
 class Sql {
-
-  // 默认连接
-  public static ?\PDO $__conn      = null;        // 默认PDO对象
-  public static string $__host     = '127.0.0.1'; // 默认主机
-  public static string $__port     = '330y';      // 默认端口
-  public static string $__username = 'root';      // 默认账户
-  public static string $__password = 'root';      // 默认密码
-  public static string $__dbname   = 'test';      // 默认数据库名称
-  public static string $__charset  = 'utf8mb4';   // 默认字符集
-  public static string $__prefix   = '';          // 默认表前缀
-
   // 删除模式
   const MODE_DELETE = 1; // 物理删除
   const MODE_MARK = 2; // 标记删除
@@ -26,9 +15,6 @@ class Sql {
 
   // 实体
   protected ?Model $_model = null;
-
-  // 实体类型
-  protected string $_modelClass = '';
 
   // 数据
   protected array $_record = [];
@@ -51,7 +37,10 @@ class Sql {
   // 主键名
   protected array $_pks = ['id'];
 
-  // 是否自动添加时间字段
+  // 主键字段是否自增
+  protected bool $_autoIncrement = false;
+
+  // 时间字段是否自动添加
   protected bool $_autoTimeColumn = false;
 
   // 删除模式
@@ -111,12 +100,12 @@ class Sql {
   // 设置实体
   public function model(Model $model) : static {
     $this->_model = $model;
-    $this->_modelClass = $model::class;
     $this->_record = $model->toRecord();
     $this->_database = $model->getDatabase();
     $this->_table =  $model->getTable();
-    $this->_from = $this->databaseTableAlias($this->_database, $this->_table, '');
+    $this->_from = $this->databaseTableAlias($this->_database, $this->_table, $this->_alias);
     $this->_pks = $model->getPks();
+    $this->_autoIncrement = $model->getAutoIncrement();
     $this->_autoTimeColumn = $model->getAutoTimeColumn();
     $this->_deleteMode = $model->getDeleteMode();
     return $this;
@@ -127,6 +116,17 @@ class Sql {
     return $this->_model;
   }
 
+  // 设置记录
+  public function record(array $record) : static {
+    $this->_record = $record;
+    return $this;
+  }
+
+  // 获取记录
+  public function getRecord() : array {
+    return $this->_record;
+  }
+
   // 设置数据库连接
   public function conn(\PDO $conn) : static {
     $this->_conn = $conn;
@@ -135,18 +135,7 @@ class Sql {
 
   // 获取数据库连接
   public function getConn() : \PDO {
-    if ($this->_conn !== null) { return $this->_conn; }
-    if ($this->_model !== null) { $this->_conn = $this->_model->getConn(); }
-    if ($this->_conn !== null) { return $this->_conn; }
-    if (self::$__conn !== null) { return self::$__conn; }
-    $dsn = sprintf("mysql:host=%s:%d;dbname=%s;charset=%s;", self::$__host, self::$__port, self::$__dbname, self::$__charset);
-    $options = array(
-        \PDO::ATTR_PERSISTENT => true,
-        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-        \PDO::ATTR_EMULATE_PREPARES => false,
-    );
-    return self::$__conn = new \PDO($dsn, self::$__username, self::$__password, $options);
+    return $this->_conn ?? $this->model->getConn();
   }
 
   // 设置数据库名
@@ -205,13 +194,24 @@ class Sql {
     return $this->_pks;
   }
 
-  // 设置是否自动添加时间字段
+  // 设置主键是否自增
+  public function autoIncrement(bool $autoIncrement) : static {
+    $this->_autoIncrement = $autoIncrement;
+    return $this;
+  }
+
+  // 获取主键是否自增
+  public function getAutoIncrement() : bool {
+    return $this->_autoIncrement;
+  }
+
+  // 设置时间字段是否自动添加
   public function autoTimeColumn(bool $autoTimeColumn) : static {
     $this->_autoTimeColumn = $autoTimeColumn;
     return $this;
   }
 
-  // 获取是否自动添加时间字段
+  // 获取时间字段是否自动添加
   public function getAutoTimeColumn() : bool {
     return $this->_autoTimeColumn;
   }
@@ -435,9 +435,7 @@ class Sql {
   // 根据主键, 查询一条数据
   public function whereByPk(mixed ...$ids) : static {
     $pks = $this->getPks();
-    if (count($ids) !== count($pks)) {
-      throw new \LogicException('$ids and $pks count are not equal!');
-    }
+    if (count($ids) !== count($pks)) { throw new \LogicException('$ids and $pks count are not equal!'); }
     foreach ($pks as $i => $pk) {
       $this->_record[$pk] = $ids[$i];
       $this->_model[$pk] = $ids[$i];
@@ -447,9 +445,17 @@ class Sql {
   }
 
   // 根据主键查询
-  public function whereById() {
+  public function whereMyPk() {
     foreach ($this->getPks() as $pk) {
       $this->where("`{$pk}` = ?", $this->_record[$pk]);
+    }
+    return $this;
+  }
+
+  // 根据属性查询
+  public function whereMy(string ...$props) {
+    foreach ($props as $prop) {
+      $this->where("`{$prop}` = ?", $this->_record[$prop]);
     }
     return $this;
   }
@@ -463,8 +469,8 @@ class Sql {
 
   // 插入列
   public function col(string $col, mixed $arg) : static {
-    $this->_record[$col] = $arg;
     $this->_model[$col] = $arg;
+    $this->_record[$col] = $arg;
     array_push($this->_cols, "`$col`");
     array_push($this->_colsArgs, $arg);
     return $this;
@@ -481,8 +487,8 @@ class Sql {
 
   // 更新列
   public function set(string $set, mixed $arg) : static {
-    $this->_record[$set] = $arg;
     $this->_model[$set] = $arg;
+    $this->_record[$set] = $arg;
     array_push($this->_sets, "`$set` = ?");
     array_push($this->_setsArgs, $arg);
     return $this;
@@ -531,7 +537,7 @@ class Sql {
     return $stmt;
   }
 
-  // 返回查询
+  // 返回查询结果
   public function selectStmt() : \PDOStatement {
     if ($this->_deleteMode === self::MODE_MARK || $this->_deleteMode === self::MODE_MARK_DELETE) {
       $this->where('`deletedTime` is null');
@@ -546,22 +552,22 @@ class Sql {
 
   // 执行查询并返回多条结果
   public function selectAll() : ArrayList {
-    return $this->selectList()->map(fn($v) => $this->_modelClass::mergeRecord($v));
+    return $this->selectList()->map(fn($v) => $this->_model::class::mergeRecord($v));
   }
 
   // 执行查询并返回一条结果
   public function select() : mixed {
     $row = $this->limit(1)->selectList()->first();
-    return $row === null ? $row : $this->_modelClass::mergeRecord($row)/*->triggerEvent('afterSelect')*/;
+    return $row === null ? $row : $this->_model::class::mergeRecord($row)/*->triggerEvent('afterSelect')*/;
   }
 
   // 执行插入并返回结果, insertId 是自增 id 的值
-  public function insert(bool $autoIncrement = true) : \PDOStatement {
+  public function insert() : \PDOStatement {
     if ($this->_autoTimeColumn) {
       $this->col('createdTime', time())->col('updatedTime', time());
     }
     $stmt = $this->query(...$this->toInsert());
-    if ($autoIncrement) {
+    if ($this->autoIncrement) {
       $this->_record[$this->getPks()[0]] = $stmt->_lastInsertId;
       $this->_model[$this->getPks()[0]] = $stmt->_lastInsertId;
     }
@@ -571,6 +577,9 @@ class Sql {
 
   // 执行更新并返回结果, affected 是影响的行数
   public function update() : \PDOStatement {
+    if (($this->_deleteMode & self::MODE_MARK) === self::MODE_MARK) {
+      $this->where('`deletedTime` = 0');
+    }
     if ($this->_autoTimeColumn) {
       $this->col('updatedTime', time());
     }
@@ -587,10 +596,10 @@ class Sql {
   // 执行删除并返回结果, affected 是影响的行数
   public function delete() : \PDOStatement {
     $stmt = null;
-    if ($this->_deleteMode & self::MODE_MARK) {
+    if (($this->_deleteMode & self::MODE_MARK) == self::MODE_MARK) {
       $stmt = $this->query(...$this->set('deletedTime', time())->toUpdate());
     }
-    if ($this->_deleteMode & self::MODE_DELETE) {
+    if (($this->_deleteMode & self::MODE_DELETE) == self::MODE_DELETE) {
       $stmt = $this->query(...$this->toDelete());
     }
     $stmt->_model = $this->_model;
@@ -677,7 +686,6 @@ class Sql {
   public function clone() : Sql {
     $sql = new static();
     $sql->_model = $this->_model;
-    $sql->_modelClass = $this->_modelClass;
     $sql->_record = $this->_record;
     $sql->_conn = $this->_conn;
     $sql->_database = $this->_database;
@@ -685,6 +693,7 @@ class Sql {
     $sql->_alias = $this->_alias;
     $sql->_from = $this->_from;
     $sql->_pks = $this->_pks;
+    $sql->_autoIncrement = $this->_autoIncrement;
     $sql->_autoTimeColumn = $this->_autoTimeColumn;
     $sql->_deleteMode = $this->_deleteMode;
     $sql->_keywords = $this->_keywords;
@@ -728,6 +737,6 @@ class Sql {
 
   // 统计总行数
   public function count() : int {
-    return $this->countSql()->columnsExpr('count(*) AS count')->selectStmt()->fetchColumn();
+    return $this->countSql()->columnsExpr('count(*) AS `count`')->selectStmt()->fetchColumn();
   }
 }
