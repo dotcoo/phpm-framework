@@ -3,11 +3,11 @@
     "description": "Zay is a PHP and Swoole framework",
     "type": "library",
     "license": "proprietary",
-    "keywords": ["PHP", "Swoole", "framework"],
+    "keywords": ["Zay", "PHP", "Swoole", "framework"],
     "homepage": "https://github.com/dotcoo/zay",
     "authors": [
         {
-            "name": "dotcoo zhao",
+            "name": "dotcoo",
             "email": "dotcoo@163.com",
             "homepage": "http://blog.dotcoo.com",
             "role": "Developer"
@@ -20,6 +20,8 @@
         "files": [
             "src/files/constants.php",
             "src/files/helpers.php",
+            "src/files/functions.php",
+            "src/files/actions.php",
             "src/files/alias.php"
         ]
     },

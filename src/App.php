@@ -82,7 +82,7 @@ final class App {
       if (!class_exists($controllerClass) || !method_exists($controllerClass, $methodName)) { $response->setStatus(404, 'Not Found'); $response->end(); }
       // session store
       if (!APP_SWOOLE) {
-        session_set_save_handler(new SessionHandlerFiles(), true);
+        // TODO 暂时屏蔽 session_set_save_handler(new SessionHandlerFiles(), true);
         session_start();
         $request->_SESSION = $_SESSION;
       }
@@ -97,13 +97,22 @@ final class App {
   }
 
   private function initSql() : void {
-    Sql::$__host     = envstr('APP_DB_HOST',     '127.0.0.1'); // 默认主机
-    Sql::$__port     = envstr('APP_DB_PORT',     '3306');      // 默认端口
-    Sql::$__username = envstr('APP_DB_USERNAME', 'root');      // 默认账户
-    Sql::$__password = envstr('APP_DB_PASSWORD', 'root');      // 默认密码
-    Sql::$__dbname   = envstr('APP_DB_DBNAME',   'zay');       // 默认数据库名称
-    Sql::$__charset  = envstr('APP_DB_CHARSET',  'utf8mb4');   // 默认字符集
-    Sql::$__prefix   = envstr('APP_DB_PREFIX',   '');          // 默认字符集
+    $host     = env('APP_DB_HOST',     '127.0.0.1'); // 默认主机
+    $port     = env('APP_DB_PORT',     '3306');      // 默认端口
+    $username = env('APP_DB_USERNAME', 'root');      // 默认账户
+    $password = env('APP_DB_PASSWORD', 'root');      // 默认密码
+    $dbname   = env('APP_DB_DBNAME',   'zay');       // 默认数据库名称
+    $charset  = env('APP_DB_CHARSET',  'utf8mb4');   // 默认字符集
+    $dsn = sprintf("mysql:host=%s:%d;dbname=%s;charset=%s;", $host, $port, $dbname, $charset);
+    $options = array(
+        \PDO::ATTR_PERSISTENT => true,
+        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+        \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+        \PDO::ATTR_EMULATE_PREPARES => false,
+    );
+    $conn = new \PDO($dsn, $username, $password, $options);
+    Sql::$conn = $conn;
+    Model::$conn = $conn;
   }
 
   private function initModel() : void {

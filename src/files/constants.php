@@ -10,10 +10,10 @@ $_ENV['APP_ROOT'] ??= rtrim(str_replace('\\', '/', dirname(__DIR__, 5)), '/') . 
 $_ENV['APP_ENV'] ??= 'production';
 
 // DEBUG
-$_ENV['APP_DEBUG'] ??= 'false';
+$_ENV['APP_DEBUG'] ??= false;
 
 // Swoole
-$_ENV['APP_SWOOLE'] ??= 'false';
+$_ENV['APP_SWOOLE'] ??= false;
 
 // Swoole Host
 $_ENV['APP_SWOOLE_HOST'] ??= '0.0.0.0';

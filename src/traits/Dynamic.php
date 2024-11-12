@@ -38,9 +38,9 @@ trait Dynamic {
     unset(static::$___objectMethods[$name]);
   }
 
-  public array $___props = [];
+  protected array $___props = [];
 
-  public array $___methods = [];
+  protected array $___methods = [];
 
   public function ___set(string $name, mixed $value) : void {
     if ($value instanceof \Closure) { $this->___methods[$name] = $value; return; }
