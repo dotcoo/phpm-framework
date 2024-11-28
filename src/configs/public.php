@@ -3,5 +3,6 @@
 
 declare(strict_types=1);
 
-class_alias(\zay\ArrayList::class, 'ArrayList');
-class_alias(\zay\App::class, 'App');
+return [
+
+];

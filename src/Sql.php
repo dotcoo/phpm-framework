@@ -5,16 +5,18 @@ declare(strict_types=1);
 
 namespace zay;
 
+use PDO, PDOStatement, LogicException, BadMethodCallException;
+
 // Sql sql构造
 // #[AllowDynamicProperties]
-class Sql {
+final class Sql {
   // 删除模式
   const MODE_DELETE = 1; // 物理删除
   const MODE_MARK = 2; // 标记删除
   const MODE_MARK_DELETE = 3; // 先标记删除,再物理删除
 
   // 全局数据库连接
-  public static ?\PDO $conn = null;
+  public static ?PDO $conn = null;
 
   // 实体
   protected ?Model $_model = null;
@@ -23,7 +25,7 @@ class Sql {
   protected array $_record = [];
 
   // 连接对象
-  protected ?\PDO $_conn = null;
+  protected ?PDO $_conn = null;
 
   // 数据库名
   protected string $_database = '';
@@ -107,7 +109,7 @@ class Sql {
   protected array $_args = [];
 
   // PDO结果集
-  protected ?\PDOStatement $_stmt = null;
+  protected ?PDOStatement $_stmt = null;
 
   // 结果集
   protected ?ArrayList $_rows = null;
@@ -149,7 +151,7 @@ class Sql {
   }
 
   // 设置数据库连接
-  public function conn(\PDO $conn) : static {
+  public function conn(PDO $conn) : static {
     $this->_conn = $conn; return $this;
   }
 
@@ -160,7 +162,7 @@ class Sql {
   }
 
   // 回收数据库连接
-  public function putConn(\PDO $conn) : static {
+  public function putConn(PDO $conn) : static {
     // TODO 暂未实现
     return $this;
   }
@@ -398,7 +400,7 @@ class Sql {
   }
 
   // 获取 PDOStatement
-  public function stms() : ?\PDOStatement {
+  public function stms() : ?PDOStatement {
     return $this->_stmt;
   }
 
@@ -420,7 +422,7 @@ class Sql {
   // 根据主键, 查询一条数据
   public function whereByPk(mixed ...$ids) : static {
     $pks = $this->getPks();
-    if (count($ids) !== count($pks)) { throw new \LogicException('$ids and $pks count are not equal!'); }
+    if (count($ids) !== count($pks)) { throw new LogicException('$ids and $pks count are not equal!'); }
     foreach ($pks as $i => $pk) {
       $this->_record[$pk] = $ids[$i];
       $this->_model[$pk] = $ids[$i];
@@ -496,8 +498,8 @@ class Sql {
 
   // 生成 INSERT 语句和参数
   public function toInsert() : array {
-    if (empty($this->_cols)) { throw new \LogicException('$this->_cols is empty!'); }
-    if (empty($this->_colsArgs)) { throw new \LogicException('$this->_colsArgs is empty!'); }
+    if (empty($this->_cols)) { throw new LogicException('$this->_cols is empty!'); }
+    if (empty($this->_colsArgs)) { throw new LogicException('$this->_colsArgs is empty!'); }
     $from     = $this->_from;
     $keywords = empty($this->_keywords)     ? ''  : ' ' . implode(' ', $this->_keywords);
     $cols     = implode(', ', $this->_cols);
@@ -510,11 +512,9 @@ class Sql {
 
   // 生成 UPDATE 语句和参数
   public function toUpdate() : array {
-    if (empty($this->_sets)) { throw new \LogicException('$this->_sets is empty!'); }
-    if (empty($this->_setsArgs)) { throw new \LogicException('$this->_setsArgs is empty!'); }
-    if (empty($this->_wheres)) {
-      throw new \LogicException('$this->_wheres is empty!');
-    }
+    if (empty($this->_sets)) { throw new LogicException('$this->_sets is empty!'); }
+    if (empty($this->_setsArgs)) { throw new LogicException('$this->_setsArgs is empty!'); }
+    if (empty($this->_wheres)) { throw new LogicException('$this->_wheres is empty!'); }
     $from     = $this->_from;
     $sets     = implode(', ', $this->_sets);
     $wheres   = empty($this->_wheres)       ? '' : ' WHERE ' . implode(' AND ', $this->_wheres);
@@ -530,8 +530,8 @@ class Sql {
 
   // 生成 REPLACE 语句和参数
   public function toReplace() : array {
-    if (empty($this->_sets)) { throw new \LogicException('$this->_sets is empty!'); }
-    if (empty($this->_setsArgs)) { throw new \LogicException('$this->_setsArgs is empty!'); }
+    if (empty($this->_sets)) { throw new LogicException('$this->_sets is empty!'); }
+    if (empty($this->_setsArgs)) { throw new LogicException('$this->_setsArgs is empty!'); }
     $from     = $this->_from;
     $sets     = implode(', ', $this->_sets);
     $this->_sql = "REPLACE INTO {$from} SET {$sets}";
@@ -541,7 +541,7 @@ class Sql {
 
   // 生成 DELETE 语句和参数
   public function toDelete() : array {
-    if (empty($this->_wheres)) { throw new \LogicException('$this->_wheres is empty!'); }
+    if (empty($this->_wheres)) { throw new LogicException('$this->_wheres is empty!'); }
     $from     = $this->_from;
     $wheres   = empty($this->_wheres)       ? '' : ' WHERE ' . join(' AND ', $this->_wheres);
     $orders   = empty($this->_orders)       ? '' : ' ORDER BY ' . join(', ', $this->_orders);
@@ -561,15 +561,15 @@ class Sql {
       case 'insert': $this->toInsert(); break;
       case 'update': $this->toUpdate(); break;
       case 'delete': $this->toDelete(); break;
-      default: throw new \LogicException('sql mode error');
+      default: throw new LogicException('sql mode error');
     }
     return $this;
   }
 
   // 执行sql
   public function execute() : static {
-    if ($this->_sql == '') { throw new \LogicException('sql is mepty'); }
-    if (str_contains($this->_sql, "'") || str_contains($this->_sql, '"')) { throw new \LogicException("a ha ha ha ha ha ha ha ha!"); }
+    if ($this->_sql == '') { throw new LogicException('sql is mepty'); }
+    if (str_contains($this->_sql, "'") || str_contains($this->_sql, '"')) { throw new LogicException("a ha ha ha ha ha ha ha ha!"); }
     log_debug($this->_sql, ...$this->_args);
     $conn = $this->getConn();
     $stmt = $this->_stmt = $conn->prepare($this->_sql);
@@ -577,14 +577,14 @@ class Sql {
     $this->_rows = ArrayList::new($stmt->fetchAll());
     $this->_affected = $stmt->rowCount();
     $this->_insertId = intval($conn->lastInsertId());
-    // $this->_insertId = intval($stmt->lastInsertId()); // \PDOStatement::lastInsertId is hack
+    // $this->_insertId = intval($stmt->lastInsertId()); // PDOStatement::lastInsertId is hack
     $this->putConn($conn);
     return $this;
   }
 
   // 执行查询并返回多条结果
   public function selectAll($deletedTime = true) : ArrayList {
-    if ($deletedTime && ($this->_deleteMode & self::MODE_MARK) === self::MODE_MARK) {
+    if ($deletedTime && ($this->_deleteMode & static::MODE_MARK) === static::MODE_MARK) {
       $this->where('`deletedTime` IS NULL');
     }
     return $this->build('select')->execute()->_rows->map(fn($v) => (new ($this->_model::class))->mergeRecord($v));
@@ -611,8 +611,8 @@ class Sql {
 
   // 执行更新并返回结果, affected 是影响的行数
   public function update($deletedTime = true) : static {
-    if ($deletedTime && ($this->_deleteMode & self::MODE_MARK) === self::MODE_MARK) {
-      this.where('`deletedTime` IS NULL');
+    if ($deletedTime && ($this->_deleteMode & static::MODE_MARK) === static::MODE_MARK) {
+      $this->where('`deletedTime` IS NULL');
     }
     if ($this->_autoTimeColumn) {
       $this->col('updatedTime', time());
@@ -627,13 +627,13 @@ class Sql {
 
   // 执行删除并返回结果, affected 是影响的行数
   public function delete($deletedTime = true) : static {
-    if ($deletedTime && ($this->_deleteMode & self::MODE_MARK) === self::MODE_MARK) {
+    if ($deletedTime && ($this->_deleteMode & static::MODE_MARK) === static::MODE_MARK) {
       $this->where('`deletedTime` IS NULL');
     }
-    if (($this->_deleteMode & self::MODE_MARK) === self::MODE_MARK) {
+    if (($this->_deleteMode & static::MODE_MARK) === static::MODE_MARK) {
       $this->set('deletedTime', time())->build('update')->execute();
     }
-    if (($this->_deleteMode & self::MODE_DELETE) === self::MODE_DELETE) {
+    if (($this->_deleteMode & static::MODE_DELETE) === static::MODE_DELETE) {
       $this->build('delete')->execute();
     }
     return $this;
@@ -698,6 +698,11 @@ class Sql {
   }
 
   // 根据指定字段查询
+  protected function callFindBy(string $name, mixed ...$args) {
+    return $this->where("`$name` = ?", ...$args)->select();
+  }
+
+  // 根据指定字段查询
   protected function callWhereBy(string $name, mixed ...$args) {
     return $this->where("`$name` = ?", ...$args);
   }
@@ -749,7 +754,9 @@ class Sql {
 
   // 动态调用
   public function __call(string $name, array $args) : mixed {
-    if (str_starts_with($name, 'whereBy') && $name !== 'whereBy') {
+    if (str_starts_with($name, 'findBy') && $name !== 'findBy') {
+      return $this->callFindBy(lcfirst(substr($name, 6)), ...$args);
+    } else if (str_starts_with($name, 'whereBy') && $name !== 'whereBy') {
       return $this->callWhereBy(lcfirst(substr($name, 7)), ...$args);
     } elseif (str_starts_with($name, 'whereLt') && $name !== 'whereLt') {
       return $this->callWhereLt(lcfirst(substr($name, 7)), ...$args);
@@ -770,6 +777,6 @@ class Sql {
     } elseif (str_starts_with($name, 'whereBetween') && $name !== 'whereBetween') {
       return $this->callWhereBetween(lcfirst(substr($name, 12)), ...$args);
     }
-    throw new \BadMethodCallException("method Sql::$name not found!");
+    throw new BadMethodCallException("method Sql::$name not found!");
   }
 }

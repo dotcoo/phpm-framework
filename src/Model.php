@@ -5,25 +5,27 @@ declare(strict_types=1);
 
 namespace zay;
 
-use zay\interfaces\EventCenterInterface;
-use zay\interfaces\StateInterface;
-use zay\traits\Dynamic;
-use zay\traits\EventCenter;
+use ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, PDO, BadMethodCallException;
 
-abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \Serializable, \JsonSerializable, EventCenterInterface, StateInterface {
+use zay\interfaces\EventInterface;
+use \zay\interfaces\StateInterface;
+use zay\traits\DynamicTrait;
+use zay\traits\EventTrait;
+
+abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, EventInterface, StateInterface {
   // 删除模式
   const MODE_DELETE = 1; // 物理删除
   const MODE_MARK = 2; // 标记删除
   const MODE_MARK_DELETE = 3; // 先标记删除,再物理删除
 
-  use Dynamic;
-  use EventCenter;
+  use DynamicTrait;
+  use EventTrait;
 
   public static function new(array $array = [], bool $ignoreChange = false) : static {
-    return (new static())->mergeArrayAlias($array, $ignoreChange);
+    return (new static())->mergeArray($array, $ignoreChange);
   }
 
-  public function mergeArrayAlias(array $array, bool $ignoreChange = false) : static {
+  public function mergeArray(array $array, bool $ignoreChange = false) : static {
     foreach($array as $name => $value) {
       $this->___props[$name] = $value;
       if ($ignoreChange) { continue; }
@@ -36,7 +38,7 @@ abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \S
     return $this->___props;
   }
 
-  public function mergeRecordAlias(array $record) : static { // storage to memory, subclass overwrite
+  public function mergeRecord(array $record) : static { // storage to memory, subclass overwrite
     foreach($record as $name => $value) {
       $this->___props[$name] = $value;
     }
@@ -67,6 +69,10 @@ abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \S
     return $retval;
   }
 
+  public function clone() : static {
+    return static::new($this->___props);
+  }
+
   public function __getState() : array {
     return ['___props' => $this->___props];
   }
@@ -76,7 +82,7 @@ abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \S
   }
 
   // 数据库连接
-  public static ?\PDO $conn = null;
+  public static ?PDO $conn = null;
 
   // 数据库名称
   public static ?string $database = null;
@@ -100,7 +106,7 @@ abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \S
   public static ?int $deleteMode = null;
 
   // 数据库连接
-  protected ?\PDO $_conn = null;
+  protected ?PDO $_conn = null;
 
   // 数据库名称
   protected ?string $_database = null;
@@ -124,12 +130,12 @@ abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \S
   protected ?int $_deleteMode = null;
 
   // 设置当前实体对象的数据库连接对象
-  public function setConn(?\PDO $conn) : static {
+  public function setConn(?PDO $conn) : static {
     $this->_conn = $conn; return $this;
   }
 
   // 获取当前实体对象的数据库连接对象
-  public function getConn() : ?\PDO {
+  public function getConn() : ?PDO {
     // TODO 需要连接池
     return $this->_conn ?? $this::class::$conn ?? null; // ?: MySQLPool->getInstance()->get();
   }
@@ -151,7 +157,7 @@ abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \S
 
   // 获取当前实体对象的表名
   public function getTable() : string {
-    return env('APP_DB_PREFIX') . ($this->_table ?? $this::class::$table ?? camel2under(pascal2camel(class2class(static::class))));
+    return env('APP_DB_PREFIX') . ($this->_table ?? $this::class::$table ?? camel2under(pascal2camel(substr(static::class, strrpos(static::class, '\\') + 1))));
   }
 
   // 设置当前实体对象的别名
@@ -234,7 +240,7 @@ abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \S
   // 加载数据
   public function load(string ...$columns) : ?static {
     $model = $this->newSql()->columns(...$columns)->whereMyPk()->select();
-    return $model === null ? null : $this->mergeArrayAlias($model->toArray());
+    return $model === null ? null : $this->mergeArray($model->toArray());
   }
 
   // 是否存在
@@ -263,8 +269,8 @@ abstract class Model implements \ArrayAccess, \Countable, \IteratorAggregate, \S
   // 动态调用
   public function __call(string $name, array $args) : mixed {
     $err = null;
-    try { return $this->___call($name, $args); } catch (\BadMethodCallException $e) { $err = $e; }
-    try { return $this->newSql()->$name(...$args); } catch (\BadMethodCallException $e) {}
+    try { return $this->___call($name, $args); } catch (BadMethodCallException $e) { $err = $e; }
+    try { return $this->newSql()->$name(...$args); } catch (BadMethodCallException $e) { $err = $e; }
     throw $err;
   }
 }

@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 namespace zay;
 
-use zay\exceptions\VerifyException;
+use zay\exceptions\VerifyFailException;
 
 // o{username用户名.s8-16/^[a-zA-Z]\\w{7-15}$/"请输入用户名!"}
 // o{ 键 中文名称.(点分隔符) 类型(小写必填 大写选填) 最小值(可省略)-(可省略)最大值 (默认值) /xxx/(正则表达式 不支持flags) |错误提示| }
@@ -46,7 +46,7 @@ final class Verify {
     if ($this->current === '(') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到 [ 找到了 {$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 [ 找到了 {$this->current}");
     }
   }
 
@@ -55,7 +55,7 @@ final class Verify {
     if ($this->current === ')') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到 ] 找到了 {$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 ] 找到了 {$this->current}");
     }
   }
 
@@ -64,7 +64,7 @@ final class Verify {
     if ($this->current === '[') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到[ 找到了{$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到[ 找到了{$this->current}");
     }
   }
 
@@ -73,7 +73,7 @@ final class Verify {
     if ($this->current === ']') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到] 找到了{$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到] 找到了{$this->current}");
     }
   }
 
@@ -82,7 +82,7 @@ final class Verify {
     if ($this->current === '{') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到{ 找到了{$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到{ 找到了{$this->current}");
     }
   }
 
@@ -91,7 +91,7 @@ final class Verify {
     if ($this->current === '}') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到} 找到了{$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到} 找到了{$this->current}");
     }
   }
 
@@ -105,7 +105,7 @@ final class Verify {
     if ($this->current === '"') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到 \" 找到了 {$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 \" 找到了 {$this->current}");
     }
   }
 
@@ -119,7 +119,7 @@ final class Verify {
     if ($this->current === "'") {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到 ' 找到了 {$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 ' 找到了 {$this->current}");
     }
   }
 
@@ -133,7 +133,7 @@ final class Verify {
     if ($this->current === ',') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到 , 找到了 {$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 , 找到了 {$this->current}");
     }
   }
 
@@ -147,7 +147,7 @@ final class Verify {
     if ($this->current === '/') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到 / 找到了 {$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 / 找到了 {$this->current}");
     }
   }
 
@@ -156,7 +156,7 @@ final class Verify {
     if ($this->current === '|') {
       $this->advance()->skipWhitespace();
     } else {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 没有找到 | 找到了 {$this->current}");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 | 找到了 {$this->current}");
     }
   }
 
@@ -339,7 +339,7 @@ final class Verify {
     $this->advance()->skipWhitespace();
     $max = $this->readNumber();
     if ($max < $min) {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 最大值不能小于最小值!");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 最大值不能小于最小值!");
     }
     $this->readDot();
     return [$min, $max];
@@ -357,7 +357,7 @@ final class Verify {
     $this->advance()->skipWhitespace();;
     $max = $this->readFloat();
     if ($max < $min) {
-      throw new VerifyException("rules: {$this->text}, pos: {$this->pos}, 最大值不能小于最小值!");
+      throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 最大值不能小于最小值!");
     }
     $this->readDot();
     return [$min, $max];
@@ -465,7 +465,7 @@ final class Verify {
     if ($this->isWord()) {
       return $this->readLabelAll();
     }
-    throw new VerifyException('unreachable!');
+    throw new VerifyFailException('unreachable!');
   }
 
   // 是否引号标签
@@ -620,31 +620,23 @@ final class Verify {
   // ====== 静态检测 ======
 
   // 正则表达式映射表
-  protected static array $regexps = [];
-
-  public static function setRegexps(array $regexps) : void {
-    static::$regexps = $regexps;
-  }
-
-  public static function addRegexp(string $name, string $regexp) : void {
-    static::$regexps[$name] = $regexp;
-  }
+  public static array $regexps = [];
 
   // 规则缓存
-  protected static array $rulesCache = [];
+  public static array $rulesCache = [];
 
   // 解析规则
   public static function parseRules(string $rules) : array {
-    if (!array_key_exists($rules, self::$rulesCache)) {
-      $paramsRules = new self($rules);
-      self::$rulesCache[$rules] = $paramsRules->parse();
+    if (!array_key_exists($rules, static::$rulesCache)) {
+      $paramsRules = new static($rules);
+      static::$rulesCache[$rules] = $paramsRules->parse();
     }
-    return self::$rulesCache[$rules];
+    return static::$rulesCache[$rules];
   }
 
   // 参数验证
   public static function paramsVerify(mixed $val, string $rules, string $fullpath = '', string $label = '', int $depth = 0) : array {
-    return self::dataVerify($val, self::parseRules("o{{$rules}}"), $fullpath, $label, $depth + 1);
+    return static::dataVerify($val, static::parseRules("o{{$rules}}"), $fullpath, $label, $depth + 1);
   }
   
   // 检查数据
@@ -677,7 +669,7 @@ final class Verify {
       }
       // 必填 没填
       if ($r['required'] && $isEmpty($val)) {
-        throw new VerifyException("{$label}不能为空!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
       }
       // 选填 没填
       if (!$r['required'] && $isEmpty($val)) {
@@ -692,23 +684,23 @@ final class Verify {
       }
       // 类型
       if ($r['type'] === 'int' && !is_int($val) || $r['type'] === 'float' && !(is_int($val) || is_float($val))) {
-        throw new VerifyException("{$label}必须是一个数字!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}必须是一个数字!", 1, $depth + 1, $path);
       }
       // 负数
       if (!$r['minus'] && $val < 0) {
-        throw new VerifyException("{$label}不能为负数!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}不能为负数!", 1, $depth + 1, $path);
       }
       // 零
       if (!$r['zero'] && $val === 0) {
-        throw new VerifyException("{$label}不能为0!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}不能为0!", 1, $depth + 1, $path);
       }
       // 最小值
       if ($r['min'] !== null && $val < $r['min']) {
-        throw new VerifyException("{$label}最小为{$r['min']}!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}最小为{$r['min']}!", 1, $depth + 1, $path);
       }
       // 最大值
       if ($r['max'] !== null && $val > $r['max']) {
-        throw new VerifyException("{$label}最大为{$r['max']}!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}最大为{$r['max']}!", 1, $depth + 1, $path);
       }
       return $val;
     }
@@ -721,7 +713,7 @@ final class Verify {
       }
       // 必填 没填
       if ($r['required'] && $isEmpty($val)) {
-        throw new VerifyException("{$label}不能为空!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
       }
       // 选填 没填
       if (!$r['required'] && $isEmpty($val)) {
@@ -737,15 +729,15 @@ final class Verify {
       }
       // 类型
       if (!is_string($val)) {
-        throw new VerifyException("{$label}必须是一个字符串!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}必须是一个字符串!", 1, $depth + 1, $path);
       }
       // 长度范围
       if ($r['min'] !== null && mb_strlen($val) < $r['min'] || $r['max'] !== null && mb_strlen($val) > $r['max']) {
-        throw new VerifyException("{$label}长度为{$r['min']}-{$r['max']}位!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}长度为{$r['min']}-{$r['max']}位!", 1, $depth + 1, $path);
       }
       // 正则表达式
       if ($r['regexp'] !== null && !preg_match($r['regexp'], $val)) {
-        throw new VerifyException(empty($r['regexpErrmsg']) ? "{$label}格式不正确!" : $r['regexpErrmsg'], 1, $depth + 1, $path);
+        throw new VerifyFailException(empty($r['regexpErrmsg']) ? "{$label}格式不正确!" : $r['regexpErrmsg'], 1, $depth + 1, $path);
       }
       return $val;
     }
@@ -754,15 +746,15 @@ final class Verify {
     if ($r['type'] === 'array') {
       // 必填 没填
       if ($r['required'] && $isEmpty($val)) {
-        throw new VerifyException("{$label}不能为空!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
       }
       // 类型
       if (!is_array($val)) {
-        throw new VerifyException("{$label}必须是一个数组!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}必须是一个数组!", 1, $depth + 1, $path);
       }
       // 必填 空数组
       if ($r['required'] && count($val) === 0) {
-        throw new VerifyException("{$label}不能为空数组!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}不能为空数组!", 1, $depth + 1, $path);
       }
       // 选填 没填
       if (!$r['required'] && $isEmpty($val)) {
@@ -770,11 +762,11 @@ final class Verify {
       }
       // 最小
       if ($r['min'] !== null && count($val) < $r['min']) {
-        throw new VerifyException("{$label}数量最少{$r['min']}个!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}数量最少{$r['min']}个!", 1, $depth + 1, $path);
       }
       // 最大
       if ($r['max'] !== null && count($val) > $r['max']) {
-        throw new VerifyException("{$label}数量最多{$r['max']}个!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}数量最多{$r['max']}个!", 1, $depth + 1, $path);
       }
       // 数组元素
       $newVal = [];
@@ -789,7 +781,7 @@ final class Verify {
     if ($r['type'] === 'object') {
       // 必填 没填
       if ($r['required'] && $isEmpty($val)) {
-        throw new VerifyException("{$label}不能为空!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
       }
       // 选填 没填
       if (!$r['required'] && $isEmpty($val)) {
@@ -797,7 +789,7 @@ final class Verify {
       }
       // 类型
       if (!is_array($val)) {
-        throw new VerifyException("{$label}必须是一个对象!", 1, $depth + 1, $path);
+        throw new VerifyFailException("{$label}必须是一个对象!", 1, $depth + 1, $path);
       }
       // 对象元素
       $newVal = [];

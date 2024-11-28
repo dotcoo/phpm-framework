@@ -8,4 +8,4 @@ namespace zay\exceptions;
 use zay\Exception;
 
 // 验证错误
-class VerifyException extends Exception {}
+class VerifyFailException extends Exception {}

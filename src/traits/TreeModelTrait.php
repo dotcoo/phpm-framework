@@ -5,11 +5,14 @@ declare(strict_types=1);
 
 namespace zay\traits;
 
-use zay\interfaces\ModelTreeInterface;
+use Closure;
+
+use zay\interfaces\TreeModelInterface;
+use zay\interfaces\StateInterface;
 use zay\ArrayList;
 use zay\Sql;
 
-trait ModelTree {
+trait TreeModelTrait {
   public ?ArrayList $_list = null;
 
   public int $_tlevel = -1;
@@ -46,11 +49,11 @@ trait ModelTree {
     return $pids;
   }
 
-  public function isNode(?ModelTreeInterface $node) : bool {
+  public function isNode(?TreeModelInterface $node) : bool {
     return $node !== null && $this->getTids() === $node->getTids();
   }
 
-  public function setParent(?ModelTreeInterface $parent) : ModelTreeInterface {
+  public function setParent(?TreeModelInterface $parent) : TreeModelInterface {
     $this->_tparent = $parent; return $this;
   }
 
@@ -69,7 +72,7 @@ trait ModelTree {
     return $sql;
   }
 
-  public function getParent(string ...$columns) : ?ModelTreeInterface {
+  public function getParent(string ...$columns) : ?TreeModelInterface {
     if ($this->_tparent !== false) {
       return $this->_tparent;
     } elseif ($this->tempty($this->getTpids())) {
@@ -81,7 +84,7 @@ trait ModelTree {
     }
   }
 
-  public function isParent(?ModelTreeInterface $parent) : bool {
+  public function isParent(?TreeModelInterface $parent) : bool {
     return $parent !== null && $this->getTpids() === $parent->getTids();
   }
 
@@ -94,7 +97,7 @@ trait ModelTree {
     return $parents;
   }
 
-  public function isParents(?ModelTreeInterface $parent, int $distance = PHP_INT_MAX) : bool {
+  public function isParents(?TreeModelInterface $parent, int $distance = PHP_INT_MAX) : bool {
     for ($i = 0, $p = $this->getParent(); $i < $distance && $p !== null; $i++) {
       if ($p->isNode($parent)) { return true; }
       $p = $p->getParent();
@@ -102,11 +105,11 @@ trait ModelTree {
     return false;
   }
 
-  public function setChildren(ModelTreeInterface ...$children) : ModelTreeInterface {
+  public function setChildren(TreeModelInterface ...$children) : TreeModelInterface {
     $this->_children === new ArrayList($children); return $this;
   }
 
-  public function appendChild(ModelTreeInterface ...$children) : ModelTreeInterface {
+  public function appendChild(TreeModelInterface ...$children) : TreeModelInterface {
     $this->getChildren()->push(...$children); return $this;
   }
 
@@ -138,7 +141,7 @@ trait ModelTree {
     return $count;
   }
 
-  public function isDescendants(ModelTreeInterface $node, bool $self = false, int $distance = PHP_INT_MAX) : bool {
+  public function isDescendants(TreeModelInterface $node, bool $self = false, int $distance = PHP_INT_MAX) : bool {
     --$distance;
     if ($self && $this->isNode($node)) { return true; }
     foreach ($this->getChildren() as $c) {
@@ -169,7 +172,7 @@ trait ModelTree {
     return $count;
   }
 
-  public function each(\Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : ModelTreeInterface {
+  public function each(Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : TreeModelInterface {
     --$distance;
     if ($self) { $func($this); }
     foreach ($this->getChildren() as $c) {
@@ -179,7 +182,7 @@ trait ModelTree {
     return $this;
   }
 
-  public function eachReverse(\Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : ModelTreeInterface {
+  public function eachReverse(Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : TreeModelInterface {
     --$distance;
     foreach ($this->getChildren()->reverse() as $c) {
       if ($distance !== 0) { $c->eachReverse($func, false, $distance); }
@@ -189,7 +192,7 @@ trait ModelTree {
     return $this;
   }
 
-  public function map(\Closure $func, bool $self = true, int $distance = PHP_INT_MAX) : array {
+  public function map(Closure $func, bool $self = true, int $distance = PHP_INT_MAX) : array {
     --$distance;
     $children = [];
     foreach ($this->getChildren() as $c) {
@@ -198,11 +201,11 @@ trait ModelTree {
     return $self ? $func($this, $children) : $children;
   }
 
-  public static function getTree(ArrayList $list = null) : ModelTreeInterface {
+  public static function getTree(ArrayList $list = null) : TreeModelInterface {
     return static::root()->parseTree($list ?? static::order('`ord` DESC')->selectAll());
   }
 
-  public function parseTree(?ArrayList $list, $detach = true) : ModelTreeInterface {
+  public function parseTree(?ArrayList $list, $detach = true) : TreeModelInterface {
     $this->_tparent = null;
     $this->_children = new ArrayList();
     $this->_list = new ArrayList();
@@ -221,7 +224,7 @@ trait ModelTree {
     return $root->parseLevel()->detach($detach);
   }
 
-  public function showChildren() : ModelTreeInterface {
+  public function showChildren() : TreeModelInterface {
     $this->___props['children'] = $this->_children;
     foreach ($this->_children as $c) {
       $c->showChildren();
@@ -229,19 +232,19 @@ trait ModelTree {
     return $this;
   }
 
-  public function parseLevel() : ModelTreeInterface {
+  public function parseLevel() : TreeModelInterface {
     return $this->each(fn($v) => $v->_tlevel = $v->getParent()->_tlevel + 1);
   }
 
-  public function findTree(\Closure $func, $defval = null) : ?ModelTreeInterface {
+  public function findTree(Closure $func, $defval = null) : ?TreeModelInterface {
     return $this->_list->find($func, $defval);
   }
 
-  public function findNode(int $id, $defval = null) : ModelTreeInterface {
+  public function findNode(int $id, $defval = null) : TreeModelInterface {
     return $this->_list->find(fn($v) => $v->getTids()[0] === $id, $defval);
   }
 
-  public function detach(bool $detach = true) : ModelTreeInterface {
+  public function detach(bool $detach = true) : TreeModelInterface {
     $this->_detach = $detach;
     $this->getChildren()->each(fn($v) => $v->setParent($detach ? null : $this));
     return $this;
@@ -264,14 +267,14 @@ trait ModelTree {
     $this->ignoreChange()->parseTree($data['_list'], $data['_detach']);
   }
 
-  public function addRoot(array $top = []) : ModelTreeInterface {
+  public function addRoot(array $top = []) : TreeModelInterface {
     $node = static::new(array_merge($top, ['id' => 0, 'pid' => -1, 'name' => 'ROOT']));
     $this->list->unshift($node);
     $this->getChildren()->unshift($node);
     return $this;
   }
 
-  public static function root(array $root = []) : ModelTreeInterface {
+  public static function root(array $root = []) : TreeModelInterface {
     return static::new(array_merge($root, ['id' => 0, 'pid' => -1, 'name' => 'ROOT']));
   }
 }

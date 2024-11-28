@@ -3,34 +3,66 @@
 
 declare(strict_types=1);
 
-if (!function_exists('str_starts_with')) { // php8
-  function str_starts_with(string $haystack, string $needle) : bool {
-    return strpos($haystack, $needle) === 0;
-  }
+// if (PHP_VERSION_ID < 80000) {
+//   function str_starts_with(string $haystack, string $needle) : bool {
+//     return strpos($haystack, $needle) === 0;
+//   }
 
-  function str_contains(string $haystack, string $needle) : bool {
-    return strpos($haystack, $needle) !== false;
-  }
+//   function str_contains(string $haystack, string $needle) : bool {
+//     return strpos($haystack, $needle) !== false;
+//   }
 
-  function str_ends_with(string $haystack, string $needle) : bool {
-    return strrpos($haystack, $needle) === strlen($haystack) - strlen($needle);
-  }
+//   function str_ends_with(string $haystack, string $needle) : bool {
+//     return strrpos($haystack, $needle) === strlen($haystack) - strlen($needle);
+//   }
+// }
+
+// if (PHP_VERSION_ID < 80100) {
+//   function array_is_list(array $array) : bool {
+//     for ($l = count($array), $i = 0; $i < $l; $i++) {
+//       if (!array_key_exists($i, $array)) { return false; }
+//     }
+//     return true;
+//   }
+// }
+
+function camel2under(string $name) : string {
+  static $caches = [];
+  return $caches[$name] ?? $caches[$name] = strtolower(preg_replace('/(\B[A-Z])/', '_\\1', $name));
 }
 
-if (!function_exists('array_is_list')) { // php8.1
-  function array_is_list(array $array) : bool {
-    for ($l = count($array), $i = 0; $i < $l; $i++) {
-      if (!array_key_exists($i, $array)) { return false; }
-    }
-    return true;
-  }
+function under2camel(string $name) : string {
+  static $caches = [];
+  return $caches[$name] ?? $caches[$name] = lcfirst(str_replace('_', '', ucwords($name, '_')));
+  // return $caches[$name] ?? $caches[$name] = preg_replace_callback('/_([a-z])/', fn($m) => strtoupper($m[1]), $name);
+}
+
+function camel2pascal(string $name) : string {
+  static $caches = [];
+  return $caches[$name] ?? $caches[$name] = ucfirst($name);
+}
+
+function pascal2camel(string $name) : string {
+  static $caches = [];
+  return $caches[$name] ?? $caches[$name] = lcfirst($name);
+}
+
+function camel2kebab(string $name) : string {
+  static $caches = [];
+  return $caches[$name] ?? $caches[$name] = strtolower(preg_replace('/(\B[A-Z])/', '-\\1', $name));
+}
+
+function kebab2camel(string $name) : string {
+  static $caches = [];
+  return $caches[$name] ?? $caches[$name] = lcfirst(str_replace('-', '', ucwords($name, '-')));
+  // return $caches[$name] ?? $caches[$name] = preg_replace_callback('/-([a-z])/', fn($m) => strtoupper($m[1]), $name);
 }
 
 function env(string $name, mixed $defval = null) : bool|int|float|string|array|object {
   return $_ENV[$name] ?? $defval;
 }
 
-function explode2(string $separator, ?string $string, null|string|\Closure $map = null) : array {
+function explode2(string $separator, ?string $string, null|string|Closure $map = null) : array {
   return empty($string) ? [] : (empty($map) ? explode($separator, $string) : array_map($map, explode($separator, $string)));
 }
 
@@ -62,14 +94,6 @@ function json_decode_object(string $value) : ?object {
   return json_decode($value, true, 512, JSON_INVALID_UTF8_IGNORE | JSON_BIGINT_AS_STRING);
 }
 
-function mkdir2(string $filename) : string {
-  $dirname = dirname($filename);
-  if (!file_exists($dirname)) {
-    mkdir($dirname, 0755, true);
-  }
-  return $filename;
-}
-
 function str_rand(int $len = 8, string $char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') : string {
   $s = '';
   for ($l = strlen($char), $i = 0; $i < $len; $i++) {
@@ -78,6 +102,55 @@ function str_rand(int $len = 8, string $char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef
   return $s;
 }
 
+function filename(string $filename) : string {
+  return pathinfo($filename, PATHINFO_BASENAME);
+}
+
+function filebase(string $filename) : string {
+  return pathinfo($filename, PATHINFO_FILENAME);
+}
+
+function fileext(string $filename) : string {
+  return pathinfo($filename, PATHINFO_EXTENSION);
+}
+
+function mkdir2(string $filename) : string {
+  $dirname = dirname($filename);
+  if (!file_exists($dirname)) {
+    mkdir($dirname, 0755, true);
+  }
+  return $filename;
+}
+
+function scanfile2(string $path, string $dir = '', array &$files = []) : array {
+  if (!file_exists("$path$dir")) { return $files; }
+  foreach (scandir("$path$dir") as $file) {
+    if ($file == '.' || $file == '..' || !is_file("$path$dir/$file")) { continue; }
+    array_push($files, $file);
+  }
+  return $files;
+}
+
+function scandir2(string $path, string $dir = '', array &$files = []) : array {
+  if (!file_exists("$path$dir")) { return $files; }
+  foreach (scandir("$path$dir") as $file) {
+    if ($file == '.' || $file == '..' || !is_dir("$path$dir/$file")) { continue; }
+    array_push($files, $file);
+  }
+  return $files;
+}
+
+function scanfile3(string $path, string $dir = '', array &$files = []) : array {
+  if (!file_exists("$path$dir")) { return $files; }
+  $recursion = function(string $path, string $dir = '', array &$files = []) use (&$recursion) : array {
+    foreach (scandir("$path$dir") as $file) {
+      if ($file == '.' || $file == '..') { continue; }
+      is_dir("$path$dir/$file") ? $recursion($path, "$dir/$file", $files) : array_push($files, "$dir/$file");
+    }
+    return $files;
+  };
+  return $recursion($path, $dir, $files);
+}
 
 function log_args(mixed ...$args) : array {
   foreach ($args as $i => $a) {
@@ -105,11 +178,11 @@ function log_args(mixed ...$args) : array {
 }
 
 function log_debug(mixed ...$args) : void {
-  file_put_contents(mkdir2(APP_LOG . date('Ymd') . '.log'), date('Y-m-d H:i:s ') . implode(', ', log_args(...$args)) . "\n", FILE_APPEND);
+  file_put_contents(mkdir2(APP_LOG . '/' . date('Ymd') . '.log'), date('Y-m-d H:i:s ') . implode(', ', log_args(...$args)) . "\n", FILE_APPEND);
 }
 
 function log_debugf(string $format, mixed ...$args) : void {
-  file_put_contents(mkdir2(APP_LOG . date('Ymd') . '.log'), date('Y-m-d H:i:s ') . sprintf($format, ...log_args(...$args)) . "\n", FILE_APPEND);
+  file_put_contents(mkdir2(APP_LOG . '/' . date('Ymd') . '.log'), date('Y-m-d H:i:s ') . sprintf($format, ...log_args(...$args)) . "\n", FILE_APPEND);
 }
 
 function log_debug_return(mixed $retval, mixed ...$args) : mixed {
@@ -121,11 +194,11 @@ function log_debugf_return(mixed $retval, string $format, mixed ...$args) : mixe
 }
 
 function thumbnail(string $file, int $new_w = 200, $new_h = 200, bool $in = false) : string {
-  if (!file_exists($file)) { throw new \LogicException('图片不存在!'); }
+  if (!file_exists($file)) { throw new LogicException('图片不存在!'); }
   $imgcreatefunc = [IMAGETYPE_JPEG => 'imagecreatefromjpeg', IMAGETYPE_JPEG2000 => 'imagecreatefromjpeg', IMAGETYPE_PNG => 'imagecreatefrompng', IMAGETYPE_WEBP => 'imagecreatefromwebp'];
   $imgsavefunc = [IMAGETYPE_JPEG => 'imagejpeg', IMAGETYPE_JPEG2000 => 'imagejpeg', IMAGETYPE_PNG => 'imagepng', IMAGETYPE_WEBP => 'imagewebp'];
   list($src_w, $src_h, $src_type) = getimagesize($file);
-  if (!array_key_exists($src_type, $imgcreatefunc)) { throw new \LogicException('图片的类型不支持!'); }
+  if (!array_key_exists($src_type, $imgcreatefunc)) { throw new LogicException('图片的类型不支持!'); }
   $src_image = $imgcreatefunc[$src_type]($file);
   if($src_w > $new_w || $src_h > $new_h){
     $scale_w = $new_w / $src_w;
@@ -151,11 +224,11 @@ function thumbnail(string $file, int $new_w = 200, $new_h = 200, bool $in = fals
 }
 
 function imagecut(string $file, int $new_w = 200, int $new_h = 200, int $pos = 0) : string {
-  if (!file_exists($file)) { throw new \LogicException('图片不存在!'); }
+  if (!file_exists($file)) { throw new LogicException('图片不存在!'); }
   $imgcreatefunc = [IMAGETYPE_JPEG => 'imagecreatefromjpeg', IMAGETYPE_JPEG2000 => 'imagecreatefromjpeg', IMAGETYPE_PNG => 'imagecreatefrompng', IMAGETYPE_WEBP => 'imagecreatefromwebp'];
   $imgsavefunc = [IMAGETYPE_JPEG => 'imagejpeg', IMAGETYPE_JPEG2000 => 'imagejpeg', IMAGETYPE_PNG => 'imagepng', IMAGETYPE_WEBP => 'imagewebp'];
   list($src_w, $src_h, $src_type) = getimagesize($file);
-  if (!array_key_exists($src_type, $imgcreatefunc)) { throw new \LogicException('图片的类型不支持!'); }
+  if (!array_key_exists($src_type, $imgcreatefunc)) { throw new LogicException('图片的类型不支持!'); }
   $src_image = $imgcreatefunc[$src_type]($file);
   if($src_w > $new_w || $src_h > $new_h){
     $scale_w = $new_w / $src_w;
@@ -278,10 +351,14 @@ function var_state(mixed $data, int $indent = 0) : string {
     case 'unknown type':
       return "'unknown type'";
     default:
-      throw new \LogicException('unreachable');
+      throw new LogicException('unreachable');
   }
 }
 
 function app() : \zay\App {
   return \zay\App::getInstance();
+}
+
+function pagination() : string {
+  return 'pagination';
 }

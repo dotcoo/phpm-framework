@@ -5,21 +5,22 @@ declare(strict_types=1);
 
 namespace zay;
 
-use zay\interfaces\EventCenterInterface;
-use zay\traits\Dynamic;
-use zay\traits\EventCenter;
+use zay\interfaces\EventInterface;
+use zay\traits\DynamicTrait;
+use zay\traits\EventTrait;
 use zay\exceptions\NotFoundException;
 use zay\exceptions\VerifyException;
 
 // Request 请求
-final class Request implements EventCenterInterface {
+final class Request implements EventInterface {
 
-  use Dynamic;
-  use EventCenter;
+  use DynamicTrait;
+  use EventTrait;
 
   // 请求行
   public string $method = 'GET';
-  public string $url = '/';
+  public string $uri = '';
+  public string $url = '';
 
   // 请求头
   public array $headersList = [];
@@ -100,13 +101,8 @@ final class Request implements EventCenterInterface {
   }
 
   public function getBody() : string {
-    if ($this->body !== null) {
-      return $this->body;
-    } else if (APP_SWOOLE) {
-      return $this->body = $this->req->getContent();
-    } else {
-      return $this->body = file_get_contents('php://input');
-    }
+    if ($this->body !== null) { return $this->body; }
+    return $this->body = APP_ENGINE == 'swoole' ? $this->req->getContent() : file_get_contents('php://input');
   }
 
   public function header(string $name, string $value = '') : static {
@@ -143,7 +139,7 @@ final class Request implements EventCenterInterface {
     $request->files = $_FILES;
     $request->cookie = $_COOKIE;
     $request->request = $_REQUEST;
-    return $request->init();
+    return $request->fromInit();
   }
 
   // 从php环境创建request对象
@@ -163,15 +159,13 @@ final class Request implements EventCenterInterface {
     $request->files = $req->files ?? [];
     $request->cookie = $req->cookie ?? [];
     $request->request = array_merge($request->get, $request->post);
-    return $request->init();
+    return $request->fromInit();
   }
 
-  public function init() : static {
-    // $this->rawGet = $this->get;
-    // $this->rawPost = $this->post;
+  private function fromInit() : static {
     $this->method = $this->server['REQUEST_METHOD'];
-    $this->url = parse_url($this->server['REQUEST_URI'], PHP_URL_PATH);
-    $this->routeUrl = APP_URL === DIRECTORY_SEPARATOR ? $this->url : substr($this->url, strlen(APP_URL));
+    $this->uri = parse_url($this->server['REQUEST_URI'], PHP_URL_PATH);
+    $this->url = substr($this->uri, strlen(APP_PUBLIC_URL));
     $this->json = empty($this->json) && ($this->server['REQUEST_METHOD'] === 'POST' || $this->server['REQUEST_METHOD'] === 'PUT') && str_starts_with($this->server['HTTP_CONTENT_TYPE']??'', 'application/json') ? json_decode($this->getBody(), true) : $this->json;
     return $this;
   }

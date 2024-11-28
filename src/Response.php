@@ -5,16 +5,18 @@ declare(strict_types=1);
 
 namespace zay;
 
-use zay\interfaces\EventCenterInterface;
-use zay\traits\Dynamic;
-use zay\traits\EventCenter;
+use LogicException;
+
+use zay\interfaces\EventInterface;
+use zay\traits\DynamicTrait;
+use zay\traits\EventTrait;
 use zay\exceptions\ResponseEndException;
 
 // Response 响应
-final class Response implements EventCenterInterface {
+final class Response implements EventInterface {
 
-  use Dynamic;
-  use EventCenter;
+  use DynamicTrait;
+  use EventTrait;
 
   // 响应行
   public int $status = 200;
@@ -189,21 +191,11 @@ final class Response implements EventCenterInterface {
   }
 
   public function sendResponse() : void {
-    APP_SWOOLE ? $this->sendSwooleClient() : $this->sendFpmClient();
+    APP_ENGINE == 'swoole' ? $this->sendSwooleClient() : $this->sendFpmClient();
   }
 
-  // context data
-  public string $moduleName = '';
-  public string $controllerName = '';
-  public string $methodName = '';
-  public string $actionName = '';
-
-  // view
-  public function view(array $data = [], string $action = '') : void {
-    $this->write(View::render($data, $action ?: $this->actionName));
-  }
-
-  public function render(array $data = [], string $action = '') : string {
-    return View::render($data, $action ?: $this->actionName);
+  public function view(array $data = [], string $handler = '') : void {
+    View::$app = $this->app;
+    $this->write(View::view(View::relative('/'.$this->handler->fullname, $handler), $data));
   }
 }

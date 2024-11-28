@@ -5,21 +5,26 @@ declare(strict_types=1);
 
 namespace zay\traits;
 
-trait Dynamic {
-  protected static array $___classMethods = [];
+use Closure, BadMethodCallException, Traversable, ArrayIterator;
 
-  public static function setClassMethod(string $name, \Closure $value) : void {
-    static::$___classMethods[$name] = $value;
+trait DynamicTrait {
+  protected static array $___staticMethods = [];
+
+  public static function setStaticMethod(string $name, Closure $value) : void {
+    static::$___staticMethods[$name] = $value;
   }
 
-  public static function removeClassMethod(string $name) : void {
-    unset(static::$___classMethods[$name]);
+  public static function unsetStaticMethod(string $name) : void {
+    unset(static::$___staticMethods[$name]);
   }
 
   public static function ___callStatic(string $name, array $args) : mixed {
-    if (array_key_exists($name, static::$___classMethods)) { // log_debug('___callStatic:', static::class."::\$___classMethods['$name']->call(...);");
-      return static::$___classMethods[$name]->call(null, ...$args);
-    } else { // log_debug('___callStatic:', static::class."->$name(...);");
+    $nameStatic = $name . 'Static';
+    if (method_exists(static::class, $nameStatic)) {
+      return static::$nameStatic(...$args);
+    } elseif (array_key_exists($name, static::$___staticMethods)) {
+      return static::$___staticMethods[$name]->call(null, ...$args);
+    } else {
       return (new static())->$name(...$args);
     }
   }
@@ -30,11 +35,11 @@ trait Dynamic {
 
   protected static array $___objectMethods = [];
 
-  public static function setObjectMethod(string $name, \Closure $value) : void {
+  public static function setObjectMethod(string $name, Closure $value) : void {
     static::$___objectMethods[$name] = $value;
   }
 
-  public static function removeObjectMethod(string $name) : void {
+  public static function unsetObjectMethod(string $name) : void {
     unset(static::$___objectMethods[$name]);
   }
 
@@ -43,7 +48,7 @@ trait Dynamic {
   protected array $___methods = [];
 
   public function ___set(string $name, mixed $value) : void {
-    if ($value instanceof \Closure) { $this->___methods[$name] = $value; return; }
+    if ($value instanceof Closure) { $this->___methods[$name] = $value; return; }
     $setMethodName = 'set' . camel2pascal($name);
     if (method_exists($this, $setMethodName)) {
       $this->$setMethodName($value);
@@ -68,10 +73,8 @@ trait Dynamic {
       return $this->___methods[$getMethodName]->call($this);
     } elseif (array_key_exists($getMethodName, static::$___objectMethods)) {
       return static::$___objectMethods[$getMethodName]->call($this);
-    } elseif (array_key_exists($name, $this->___props)) {
-      return $this->___props[$name];
     } else {
-      return null;
+      return $this->___props[$name] ?? null;
     }
   }
 
@@ -80,14 +83,12 @@ trait Dynamic {
   }
 
   public function ___call(string $name, array $args) : mixed {
-    if (method_exists(static::class, $name."Alias")) { // log_debug('___call:', "\$this->{$name}Alias(...);");
-      return $this->{$name.'Alias'}(...$args);
-    } elseif (array_key_exists($name, $this->___methods)) { // log_debug('___call:', static::class."->___methods['$name']->call(\$this, ...);");
+    if (array_key_exists($name, $this->___methods)) {
       return $this->___methods[$name]->call($this, ...$args);
-    } elseif (array_key_exists($name, static::$___objectMethods)) { // log_debug('___call:', static::class."::___objectMethods['$name']->call(\$this, ...);");
+    } elseif (array_key_exists($name, static::$___objectMethods)) {
       return static::$___objectMethods[$name]->call($this, ...$args);
     }
-    throw new \BadMethodCallException(static::class."::$name method not found!");
+    throw new BadMethodCallException(static::class . "->$name method not found!");
   }
 
   public function __call(string $name, array $args) : mixed {
@@ -131,8 +132,8 @@ trait Dynamic {
     return count($this->___props);
   }
 
-  public function getIterator() : \Traversable {
-    return new \ArrayIterator($this->___props);
+  public function getIterator() : Traversable {
+    return new ArrayIterator($this->___props);
   }
 
   public function serialize() : ?string {

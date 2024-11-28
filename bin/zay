@@ -1,0 +1,12 @@
+#!/usr/bin/env php
+<?php
+// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/../src/Server.php';
+
+if (PHP_SAPI != 'cli') { exit('not cli!'); }
+
+$serv = \zay\Server::getInstance();
+$serv->start();

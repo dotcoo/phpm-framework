@@ -3,5 +3,8 @@
 
 declare(strict_types=1);
 
-class_alias(\zay\ArrayList::class, 'ArrayList');
-class_alias(\zay\App::class, 'App');
+// 模块
+return [
+  'name' => null, // 名称
+  'url' => null, // 路径
+];
