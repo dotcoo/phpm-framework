@@ -152,12 +152,12 @@ trait DynamicTrait {
     $this->___props = $data['___props'];
   }
 
-  public static array $___jsonIgnoreColumns = [];
+  public static array $___jsonIgnoreProps = [];
 
   public function jsonSerialize() : mixed {
     $json = [];
     foreach($this->___props as $name => $value) {
-      if (str_starts_with($name, '_') || in_array($name, static::$___jsonIgnoreColumns)) { continue; }
+      if (str_starts_with($name, '_') || in_array($name, static::$___jsonIgnoreProps)) { continue; }
       $json[$name] = $this->___props[$name];
     }
     return $json;

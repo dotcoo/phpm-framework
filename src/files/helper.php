@@ -62,12 +62,12 @@ function env(string $name, mixed $defval = null) : bool|int|float|string|array|o
   return $_ENV[$name] ?? $defval;
 }
 
-function explode2(string $separator, ?string $string, null|string|Closure $map = null) : array {
-  return empty($string) ? [] : (empty($map) ? explode($separator, $string) : array_map($map, explode($separator, $string)));
+function implode2(?array $array) : string {
+  return empty($array) ? '' : implode(',', $array);
 }
 
-function implode2(string $separator, array $array) : string {
-  return empty($array) ? '' : implode($separator, $array);
+function explode2(?string $string) : array {
+  return empty($string) ? [] : explode(',', $string);
 }
 
 function json_encode2(mixed $value) : string {
@@ -78,20 +78,20 @@ function json_decode2(?string $value) : mixed {
   return json_decode($value, true, 512, JSON_INVALID_UTF8_IGNORE | JSON_BIGINT_AS_STRING | JSON_OBJECT_AS_ARRAY);
 }
 
-function json_encode_array(mixed $value) : string {
-  return json_encode($value, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+function json_encode_array(?array $value) : string {
+  return empty($value) ? '[]' : json_encode($value, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
 
-function json_decode_array(string $value) : ?array {
-  return json_decode($value, true, 512, JSON_INVALID_UTF8_IGNORE | JSON_BIGINT_AS_STRING | JSON_OBJECT_AS_ARRAY);
+function json_decode_array(?string $value) : array {
+  return empty($value) ? [] : json_decode($value, true, 512, JSON_INVALID_UTF8_IGNORE | JSON_BIGINT_AS_STRING | JSON_OBJECT_AS_ARRAY);
 }
 
-function json_encode_object(mixed $value) : string {
-  return json_encode($value, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_FORCE_OBJECT);
+function json_encode_object(?array $value) : string {
+  return empty($value) ? '{}' : json_encode($value, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_FORCE_OBJECT);
 }
 
-function json_decode_object(string $value) : ?object {
-  return json_decode($value, true, 512, JSON_INVALID_UTF8_IGNORE | JSON_BIGINT_AS_STRING);
+function json_decode_object(?string $value) : array {
+  return empty($value) ? [] : json_decode($value, true, 512, JSON_INVALID_UTF8_IGNORE | JSON_BIGINT_AS_STRING | JSON_OBJECT_AS_ARRAY);
 }
 
 function str_rand(int $len = 8, string $char = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') : string {
@@ -162,7 +162,7 @@ function log_args(mixed ...$args) : array {
       case 'boolean':
       case 'array':
       case 'object':
-        $args[$i] = json_encode_array($a);
+        $args[$i] = json_encode($a);
         break;
       case 'NULL':
       case 'resource':

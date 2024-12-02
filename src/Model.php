@@ -38,17 +38,21 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
     return $this->___props;
   }
 
+  public static array $___record2props = [];
+
   public function mergeRecord(array $record) : static { // storage to memory, subclass overwrite
     foreach($record as $name => $value) {
-      $this->___props[$name] = $value;
+      $this->___props[$name] = array_key_exists($name, static::$___record2props) ? static::$___record2props[$name]($value, $record, $this) : $value;
     }
     return $this;
   }
 
+  public static array $___prop2records = [];
+
   public function toRecord() : array { // memory to storage, subclass overwrite
     $record = [];
     foreach($this->___props as $name => $value) {
-      $record[$name] = $this[$name];
+      $record[$name] = array_key_exists($name, static::$___prop2records) ? static::$___prop2records[$name]($value, $record, $this) : $this[$name];
     }
     return $record;
   }

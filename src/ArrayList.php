@@ -14,8 +14,12 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
     return is_a($obj, static::class);
   }
 
-  public static function explode(string $separator, ?string $string) : static {
+  public static function split(string $separator, ?string $string) : static {
     return new static(empty($string) ? [] : explode($separator, $string));
+  }
+
+  public static function explode(string $separator, ?string $string) : static {
+    return static::split($separator, $string);
   }
 
   public static function new(array $array = []) : static {
@@ -106,6 +110,10 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
 
   public function join(string $separator = ',') : string {
     return implode($separator, $this->___data);
+  }
+
+  public function implode(string $separator = ',') : string {
+    return $this->join($separator);
   }
 
   public function concat(mixed ...$args) : static {
