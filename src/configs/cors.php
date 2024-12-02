@@ -7,7 +7,7 @@ declare(strict_types=1);
 return [
   'allowOrigin' => '*',
   'allowMethods' => 'OPTIONS, GET, POST, PUT, DELETE',
-  'allowHeaders' => 'content-type, accept',
-  'exposeHeaders' => 'set-authorization',
+  'allowHeaders' => 'Content-Type, Accept, Authorization',
+  'exposeHeaders' => 'Set-Authorization',
   'maxAge' => '600',
 ];

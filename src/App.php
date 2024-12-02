@@ -24,7 +24,7 @@ final class App {
 
   private function __construct() {}
 
-  public ?Module $root = null;
+  public Module $root;
 
   public array $controllers = [];
 

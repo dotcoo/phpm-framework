@@ -9,9 +9,9 @@ use Closure, ReflectionObject, ReflectionMethod, LogicException;
 
 final class Module {
 
-  public ?App $app = null;
+  public App $app;
 
-  public ?self $root = null;
+  public self $root;
 
   public ?self $parent = null;
 

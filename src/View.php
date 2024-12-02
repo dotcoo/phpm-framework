@@ -11,7 +11,7 @@ use zay\exceptions\ViewException;
 
 final class View {
 
-  public static ?App $app = null;
+  public static App $app;
 
   public static array $views = [];
 

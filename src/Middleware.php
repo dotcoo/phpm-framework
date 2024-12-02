@@ -10,9 +10,11 @@ use zay\Response;
 
 abstract class Middleware {
 
-  public ?App $app = null;
+  public App $app;
 
-  public ?Module $module = null;
+  public Module $module;
+
+  public Controller $controller;
 
   abstract public function handleRequest(Request $request, Response $response) : void;
 

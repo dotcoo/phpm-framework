@@ -11,11 +11,11 @@ use zay\Response;
 
 final class Handler {
 
-  public ?App $app = null;
+  public App $app;
 
-  public ?Module $module = null;
+  public Module $module;
 
-  public ?Controller $controller = null;
+  public Controller $controller;
 
   public string $name = '';
 

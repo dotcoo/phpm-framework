@@ -7,9 +7,9 @@ namespace zay;
 
 abstract class Controller {
 
-  public ?App $app = null;
+  public App $app;
 
-  public ?Module $module = null;
+  public Module $module;
 
   public string $name = '';
 

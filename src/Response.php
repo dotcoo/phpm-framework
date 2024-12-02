@@ -39,7 +39,7 @@ final class Response implements EventInterface {
   public bool $isEnded = false;
 
   // Response
-  public ?\Swoole\Http\Response $res = null;
+  public \Swoole\Http\Response $res;
 
   // 从php环境创建response对象
   public static function fromFpmResponse() : static {
