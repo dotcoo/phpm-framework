@@ -3,6 +3,7 @@
 
 declare(strict_types=1);
 
+// 开放
 return [
 
 ];

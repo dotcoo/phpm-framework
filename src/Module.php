@@ -59,6 +59,15 @@ final class Module {
     }
   }
 
+  public function config(string $name, mixed $defval = null) : mixed {
+    $config = $this->config;
+    foreach (explode('.', $name) as $n) {
+      if (!array_key_exists($name, $config)) { return $defval; }
+      $config = $config[$n];
+    }
+    return $config;
+  }
+
   private function loadConfig() : void {
     $module = $this;
     $config = $module->configs['module'] ?? [];
@@ -88,7 +97,7 @@ final class Module {
     foreach ($middlewares as $namespaceClassname) {
       $middleware = new $namespaceClassname();
       $middleware->app = $module->app;
-      $miduleware->module = $module;
+      $middleware->module = $module;
       array_push($module->middlewares, $middleware);
     }
   }

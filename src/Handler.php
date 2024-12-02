@@ -33,8 +33,25 @@ final class Handler {
     $request->module = $response->module = $this->module;
     $request->controller = $response->controller = $this->controller;
     $request->handler = $response->handler = $this;
-    // TODO 中间件
+
+    // 请求中间件
+    $middlewares = [];
+    $module = $this->module;
+    while ($module) {
+      array_unshift($middlewares, ...$module->middlewares);
+      $module = $module->parent;
+    }
+    foreach ($middlewares as $middleware) {
+      $middleware->handleRequest($request, $response);
+    }
+
+    // 处理
     // $this->method->call(null, [$request, $response]);
     ($this->method)($request, $response);
+
+    // 响应中间件
+    foreach (array_reverse($middlewares) as $middleware) {
+      $middleware->handleResponse($request, $response);
+    }
   }
 }

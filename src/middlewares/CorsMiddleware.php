@@ -3,21 +3,21 @@
 
 declare(strict_types=1);
 
-namespace zay\Middlewares;
+namespace zay\middlewares;
 
 use zay\Request;
 use zay\Response;
-use zay\interfaces\MiddlewareInterface;
+use zay\Middleware;
 
-class Cors implements MiddlewareInterface {
-  public function handleRequest(Request $request, Response $response) : array {
+class CorsMiddleware extends Middleware {
+  public function handleRequest(Request $request, Response $response) : void {
     $module = $request->module;
     $allowOrigin = $module->config('cors.allowOrigin', '*');
     $origin = $request->getHeader('Origin');
     $allowOrigins = array_map('trim', explode2(',', $allowOrigin));
     if (!($allowOrigin === '*' || in_array($origin, $allowOrigins))) {
       $response->error('reject');
-      return [$request, $response];
+      return;
     }
     $response->header('Access-Control-Allow-Origin', $origin);
     $response->header('Vary', 'Origin');
@@ -29,10 +29,10 @@ class Cors implements MiddlewareInterface {
     if ($request->method === 'OPTIONS') {
       $response->success('ok');
     }
-    return [$request, $response];
+    return;
   }
 
-  public function handleResponse(Request $request, Response $response) : array {
-    return [$request, $response];
+  public function handleResponse(Request $request, Response $response) : void {
+    return;
   }
 }

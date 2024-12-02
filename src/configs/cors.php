@@ -3,10 +3,11 @@
 
 declare(strict_types=1);
 
+// 跨域
 return [
-  // 'allowOrigin' => '*',
-  // 'allowMethods' => 'OPTIONS, GET, POST',
-  // 'allowHeaders' => 'content-type, accept',
-  // 'exposeHeaders' => 'set-token',
-  // 'maxAge' => '600',
+  'allowOrigin' => '*',
+  'allowMethods' => 'OPTIONS, GET, POST, PUT, DELETE',
+  'allowHeaders' => 'content-type, accept',
+  'exposeHeaders' => 'set-authorization',
+  'maxAge' => '600',
 ];
