@@ -587,7 +587,7 @@ final class Sql {
     if ($deletedTime && ($this->_deleteMode & static::MODE_MARK) === static::MODE_MARK) {
       $this->where('`deletedTime` IS NULL');
     }
-    return $this->build('select')->execute()->_rows->map(fn($v) => (new ($this->_model::class))->mergeRecord($v));
+    return $this->build('select')->execute()->_rows->map(fn($v) => $this->_model::class::new()->mergeRecord($v));
   }
 
   // 执行查询并返回一条结果
@@ -602,7 +602,7 @@ final class Sql {
     }
     $this->build('insert')->execute();
     $pk = $this->getPks()[0];
-    if ($this->_autoIncrement && !in_array("`$pk`", $this->cols)) {
+    if ($this->_autoIncrement && !in_array("`$pk`", $this->_cols)) {
       $this->_model[$pk] = $this->_insertId;
       $this->_record[$pk] = $this->_insertId;
     }

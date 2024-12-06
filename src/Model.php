@@ -13,10 +13,6 @@ use zay\traits\DynamicTrait;
 use zay\traits\EventTrait;
 
 abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, EventInterface, StateInterface {
-  // 删除模式
-  const MODE_DELETE = 1; // 物理删除
-  const MODE_MARK = 2; // 标记删除
-  const MODE_MARK_DELETE = 3; // 先标记删除,再物理删除
 
   use DynamicTrait;
   use EventTrait;
@@ -34,11 +30,7 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
     return $this;
   }
 
-  public function toArray() : array {
-    return $this->___props;
-  }
-
-  public static array $___record2props = [];
+  protected static array $___record2props = [];
 
   public function mergeRecord(array $record) : static { // storage to memory, subclass overwrite
     foreach($record as $name => $value) {
@@ -47,12 +39,12 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
     return $this;
   }
 
-  public static array $___prop2records = [];
+  protected static array $___prop2records = [];
 
   public function toRecord() : array { // memory to storage, subclass overwrite
     $record = [];
     foreach($this->___props as $name => $value) {
-      $record[$name] = array_key_exists($name, static::$___prop2records) ? static::$___prop2records[$name]($value, $record, $this) : $this[$name];
+      $record[$name] = array_key_exists($name, static::$___prop2records) ? static::$___prop2records[$name]($value, $record, $this) : $value;
     }
     return $record;
   }
@@ -68,7 +60,7 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
     return count($this->___changes) > 0;
   }
 
-  public function ignoreChange(mixed $retval) : mixed {
+  public function ignoreChange(mixed $retval = null) : mixed {
     $this->___changes = [];
     return $retval;
   }
@@ -84,6 +76,26 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   public static function __setState(array $data) : static {
     return static::new($data['___props']);
   }
+
+  public static function find(mixed ...$pks) : ?static {
+    return static::new()->newSql()->whereByPk(...$pks)->select();
+  }
+
+  protected function ___call(string $name, array $args) : mixed {
+    $nameMethod = $name.'Call';
+    if (method_exists($this, $nameMethod)) {
+      $this->$nameMethod($value);
+    } elseif (array_key_exists($name, static::$___callMethods)) {
+      return static::$___callMethods[$name]->call($this, ...$args);
+    } else {
+      return $this->newSql()->$name(...$args);
+    }
+  }
+
+  // 删除模式
+  const MODE_DELETE = 1; // 物理删除
+  const MODE_MARK = 2; // 标记删除
+  const MODE_MARK_DELETE = 3; // 先标记删除,再物理删除
 
   // 数据库连接
   public static ?PDO $conn = null;
@@ -263,18 +275,5 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   // 标签
   public function getLabel() : mixed {
     return $this->name;
-  }
-
-  // 静态查找
-  public static function find(mixed ...$pks) : ?static {
-    return static::new()->newSql()->whereByPk(...$pks)->select();
-  }
-
-  // 动态调用
-  public function __call(string $name, array $args) : mixed {
-    $err = null;
-    try { return $this->___call($name, $args); } catch (BadMethodCallException $e) { $err = $e; }
-    try { return $this->newSql()->$name(...$args); } catch (BadMethodCallException $e) { $err = $e; }
-    throw $err;
   }
 }
