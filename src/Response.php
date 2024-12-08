@@ -125,14 +125,10 @@ final class Response implements EventInterface {
     $this->body .= $data;
   }
 
-  public function end(string $data = '') : void {
+  public function end(string $data = '', string $errmsg = 'end', int $errno = 0) : void {
     $this->body .= $data;
     $this->isEnded = true;
-    throw new ResponseEndException('response end');
-  }
-
-  public function json(mixed $data) : void {
-    $this->end(json_encode_array($data));
+    throw new ResponseEndException($errmsg, $errno);
   }
 
   public function message(string $errmsg = 'error', int $errno = 1, mixed $data = [], int $depth = 0) : void {
@@ -144,7 +140,7 @@ final class Response implements EventInterface {
       $data['errline'] = $stack['line'];
     }
     $this->header('content-type', 'application/json; charset=utf-8');
-    $this->json($data);
+    $this->end(json_encode_array($data), $errmsg, $errno);
   }
 
   public function errno(string $errmsg, int $errno = 1, mixed $data = [], int $depth = 0) : void {

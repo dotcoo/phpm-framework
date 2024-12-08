@@ -636,7 +636,7 @@ final class Verify {
 
   // 参数验证
   public static function paramsVerify(mixed $val, string $rules, string $fullpath = '', string $label = '', int $depth = 0) : array {
-    return static::dataVerify($val, static::parseRules("o{{$rules}}"), $fullpath, $label, $depth + 1);
+    return static::dataVerify($val, static::parseRules($rules), $fullpath, $label, $depth + 1);
   }
   
   // 检查数据

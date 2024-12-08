@@ -178,18 +178,18 @@ final class Request implements EventInterface {
 
   // params verify
   public function requestVerify(string $rules) : array {
-    return Verify::paramsVerify($this->request, $rules);
+    return Verify::paramsVerify($this->request, 'o{'.$rules.'}');
   }
 
   public function getVerify(string $rules) : array {
-    return Verify::paramsVerify($this->get, $rules);
+    return Verify::paramsVerify($this->get, 'o{'.$rules.'}');
   }
 
   public function postVerify(string $rules) : array {
-    return Verify::paramsVerify($this->post, $rules);
+    return Verify::paramsVerify($this->post, 'o{'.$rules.'}');
   }
 
   public function jsonVerify(string $rules) : array {
-    return Verify::paramsVerify($this->json, $rules);
+    return Verify::paramsVerify($this->json, 'o{'.$rules.'}');
   }
 }

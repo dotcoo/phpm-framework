@@ -60,9 +60,9 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
     return count($this->___changes) > 0;
   }
 
-  public function ignoreChange(mixed $retval = null) : mixed {
+  public function ignoreChange(mixed ...$args) : mixed {
     $this->___changes = [];
-    return $retval;
+    return empty($args) ? $this : $args[0];
   }
 
   public function clone() : static {
@@ -77,8 +77,8 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
     return static::new($data['___props']);
   }
 
-  public static function find(mixed ...$pks) : ?static {
-    return static::new()->newSql()->whereByPk(...$pks)->select();
+  public static function find(mixed ...$ids) : ?static {
+    return static::new()->newSql()->whereByPk(...$ids)->select();
   }
 
   protected function ___call(string $name, array $args) : mixed {

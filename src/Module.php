@@ -86,6 +86,7 @@ final class Module {
   private function loadHelpers() : void {
     $module = $this;
     foreach (scanfile3("{$module->path}/helpers") as $file) {
+      if (!str_ends_with($file, '.php')) { continue; }
       $path = "{$module->path}/helpers/$file";
       require $path;
     }
@@ -190,6 +191,7 @@ final class Module {
     $sourceDir = $module->path.'/views';
     $targetDir = APP_VIEW.'/'.$module->fullname;
     foreach (scanfile3($sourceDir) as $file) {
+      if (!str_ends_with($file, '.view.php')) { continue; }
       $source = $sourceDir.$file;
       $target = substr($targetDir.$file, 0, -9).'.php';
       $handler = '/'.$module->fullname.substr($file, 0, -9);
