@@ -8,5 +8,5 @@ require_once __DIR__ . '/../src/Server.php';
 
 if (PHP_SAPI != 'cli') { exit('not cli!'); }
 
-$serv = \zay\Server::getInstance();
+$serv = \net\phpm\framework\Server::getInstance();
 $serv->start();

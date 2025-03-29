@@ -3,14 +3,14 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
 use ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, PDO, BadMethodCallException;
 
-use zay\interfaces\EventInterface;
-use \zay\interfaces\StateInterface;
-use zay\traits\DynamicTrait;
-use zay\traits\EventTrait;
+use net\phpm\framework\interfaces\EventInterface;
+use net\phpm\framework\interfaces\StateInterface;
+use net\phpm\framework\traits\DynamicTrait;
+use net\phpm\framework\traits\EventTrait;
 
 abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, EventInterface, StateInterface {
 

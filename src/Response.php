@@ -3,14 +3,14 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
 use LogicException;
 
-use zay\interfaces\EventInterface;
-use zay\traits\DynamicTrait;
-use zay\traits\EventTrait;
-use zay\exceptions\ResponseEndException;
+use net\phpm\framework\interfaces\EventInterface;
+use net\phpm\framework\traits\DynamicTrait;
+use net\phpm\framework\traits\EventTrait;
+use net\phpm\framework\exceptions\ResponseEndException;
 
 // Response 响应
 final class Response implements EventInterface {

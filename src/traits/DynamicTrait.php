@@ -3,7 +3,7 @@
 
 declare(strict_types=1);
 
-namespace zay\traits;
+namespace net\phpm\framework\traits;
 
 use Closure, BadMethodCallException, Traversable, ArrayIterator;
 

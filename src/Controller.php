@@ -3,7 +3,7 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
 abstract class Controller {
 

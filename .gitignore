@@ -1,0 +1,29 @@
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Directory
+vendor
+var
+logs
+tmp
+
+# Custom
+.env*
+!.env.example
+*.log
+*.bak
+*.rar
+*.zip
+*.tar
+*.gz
+*.7z
+*.bat
+composer-*

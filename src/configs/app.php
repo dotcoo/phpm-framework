@@ -5,5 +5,5 @@ declare(strict_types=1);
 
 // 应用
 return [
-  'name' => 'zay', // 名称
+  'name' => 'phpm', // 名称
 ];

@@ -3,14 +3,14 @@
 
 declare(strict_types=1);
 
-namespace zay\traits;
+namespace net\phpm\framework\traits;
 
 use Closure;
 
-use zay\interfaces\TreeInterface;
-use zay\interfaces\StateInterface;
-use zay\ArrayList;
-use zay\Sql;
+use net\phpm\framework\interfaces\TreeInterface;
+use net\phpm\framework\interfaces\StateInterface;
+use net\phpm\framework\ArrayList;
+use net\phpm\framework\Sql;
 
 trait TreeTrait {
   public ?ArrayList $_list = null;

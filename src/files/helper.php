@@ -3,28 +3,30 @@
 
 declare(strict_types=1);
 
-// if (PHP_VERSION_ID < 80000) {
-//   function str_starts_with(string $haystack, string $needle) : bool {
-//     return strpos($haystack, $needle) === 0;
-//   }
+/*
+if (PHP_VERSION_ID < 80000) {
+  function str_starts_with(string $haystack, string $needle) : bool {
+    return strpos($haystack, $needle) === 0;
+  }
 
-//   function str_contains(string $haystack, string $needle) : bool {
-//     return strpos($haystack, $needle) !== false;
-//   }
+  function str_contains(string $haystack, string $needle) : bool {
+    return strpos($haystack, $needle) !== false;
+  }
 
-//   function str_ends_with(string $haystack, string $needle) : bool {
-//     return strrpos($haystack, $needle) === strlen($haystack) - strlen($needle);
-//   }
-// }
+  function str_ends_with(string $haystack, string $needle) : bool {
+    return strrpos($haystack, $needle) === strlen($haystack) - strlen($needle);
+  }
+}
 
-// if (PHP_VERSION_ID < 80100) {
-//   function array_is_list(array $array) : bool {
-//     for ($l = count($array), $i = 0; $i < $l; $i++) {
-//       if (!array_key_exists($i, $array)) { return false; }
-//     }
-//     return true;
-//   }
-// }
+if (PHP_VERSION_ID < 80100) {
+  function array_is_list(array $array) : bool {
+    for ($l = count($array), $i = 0; $i < $l; $i++) {
+      if (!array_key_exists($i, $array)) { return false; }
+    }
+    return true;
+  }
+}
+*/
 
 function camel2under(string $name) : string {
   static $caches = [];
@@ -327,7 +329,7 @@ function var_state(mixed $data, int $indent = 0) : string {
       $code .= str_repeat('  ', $indent) . "]";
       return $code;
     case 'object':
-      if (is_subclass_of($data, \zay\interfaces\StateInterface::class)) {
+      if (is_subclass_of($data, net\phpm\framework\interfaces\StateInterface::class)) {
         $code = $data::class . "::__setState([\n";
         foreach ($data->__getState() as $key => $val) {
           $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_any($key), var_state($val, $indent + 1));
@@ -355,8 +357,8 @@ function var_state(mixed $data, int $indent = 0) : string {
   }
 }
 
-function app() : \zay\App {
-  return \zay\App::getInstance();
+function app() : net\phpm\framework\App {
+  return net\phpm\framework\App::getInstance();
 }
 
 function pagination() : string {

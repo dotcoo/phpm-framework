@@ -5,5 +5,5 @@ declare(strict_types=1);
 
 // 中间件
 return [
-  // zay\middlewares\Cors::class,
+
 ];

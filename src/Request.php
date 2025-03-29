@@ -3,13 +3,13 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
-use zay\interfaces\EventInterface;
-use zay\traits\DynamicTrait;
-use zay\traits\EventTrait;
-use zay\exceptions\NotFoundException;
-use zay\exceptions\VerifyException;
+use net\phpm\framework\interfaces\EventInterface;
+use net\phpm\framework\traits\DynamicTrait;
+use net\phpm\framework\traits\EventTrait;
+use net\phpm\framework\exceptions\NotFoundException;
+use net\phpm\framework\exceptions\VerifyException;
 
 // Request 请求
 final class Request implements EventInterface {

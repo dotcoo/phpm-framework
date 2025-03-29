@@ -1,36 +1,36 @@
 {
-    "name": "dotcoo/zay",
-    "description": "Zay is a PHP and Swoole framework",
+    "name": "phpm/framework",
+    "description": "PHP Manager is a rapidly developing framework",
     "keywords": [
-        "zay",
-        "core",
+        "PHP Manager",
+        "phpm",
         "php",
         "swoole",
         "framework"
     ],
-    "license": "proprietary",
-    "homepage": "https://github.com/dotcoo/zay",
-    "support": {
-        "issues": "https://github.com/dotcoo/zay/issues",
-        "source": "https://github.com/dotcoo/zay"
-    },
+    "type": "library",
+    "license": "Apache-2.0",
     "authors": [
         {
             "name": "dotcoo",
             "email": "dotcoo@163.com"
         }
     ],
-    "require": {
-        "php": ">=8.1"
+    "homepage": "https://github.com/dotcoo/php-framework",
+    "support": {
+        "issues": "https://github.com/dotcoo/php-framework/issues",
+        "source": "https://github.com/dotcoo/php-framework"
     },
+    "minimum-stability": "stable",
     "autoload": {
         "files": [
             "src/files/init.php"
         ],
         "psr-4": {
-            "zay\\": "src/"
+            "net\\phpm\\framework\\": "src/"
         }
     },
-    "minimum-stability": "stable",
-    "prefer-stable": true
+    "require": {
+        "php": ">=8.1"
+    }
 }

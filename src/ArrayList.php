@@ -3,11 +3,11 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
 use ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, Traversable, ArrayIterator, Closure, SplQueue;
 
-use \zay\interfaces\StateInterface;
+use net\phpm\framework\interfaces\StateInterface;
 
 final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Serializable, JsonSerializable, StateInterface {
   public static function isArrayList(mixed $obj) : bool {

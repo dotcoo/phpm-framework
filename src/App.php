@@ -3,16 +3,16 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
 use PDO, LogicException, Closure;
 
-use zay\Module;
-use zay\exceptions\VerifyFailException;
-use zay\exceptions\ResponseEndException;
-use zay\exts\SessionHandlerFiles;
-use zay\exts\SessionHandlerRedis;
-use zay\traits\Singleton;
+use net\phpm\framework\Module;
+use net\phpm\framework\exceptions\VerifyFailException;
+use net\phpm\framework\exceptions\ResponseEndException;
+use net\phpm\framework\exts\SessionHandlerFiles;
+use net\phpm\framework\exts\SessionHandlerRedis;
+use net\phpm\framework\traits\Singleton;
 
 final class App {
 
@@ -95,7 +95,7 @@ final class App {
     $port     = env('APP_DB_PORT',     '3306');      // 默认端口
     $username = env('APP_DB_USERNAME', 'root');      // 默认账户
     $password = env('APP_DB_PASSWORD', 'root');      // 默认密码
-    $dbname   = env('APP_DB_DBNAME',   'zay');       // 默认数据库名称
+    $dbname   = env('APP_DB_DBNAME',   'phpm');      // 默认数据库名称
     $charset  = env('APP_DB_CHARSET',  'utf8mb4');   // 默认字符集
     $dsn      = env('APP_DB_DSN', sprintf("mysql:host=%s:%d;dbname=%s;charset=%s;", $host, $port, $dbname, $charset));
     $options = array(
@@ -210,7 +210,6 @@ final class App {
       // TODO session_set_save_handler(new SessionHandlerRedis(), true);
       session_start();
       $request->_SESSION = $_SESSION;
-
     }
     try {
       $handle->handle($request, $response);

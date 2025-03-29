@@ -3,9 +3,9 @@
 
 declare(strict_types=1);
 
-namespace zay\exceptions;
+namespace net\phpm\framework\exceptions;
 
-use zay\Exception;
+use net\phpm\framework\Exception;
 
 // 响应结束
 class ResponseEndException extends Exception {}

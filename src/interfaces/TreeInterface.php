@@ -3,11 +3,11 @@
 
 declare(strict_types=1);
 
-namespace zay\interfaces;
+namespace net\phpm\framework\interfaces;
 
 use Closure;
 
-use zay\ArrayList;
+use net\phpm\framework\ArrayList;
 
 interface TreeInterface {
   public function getTpks() : array;

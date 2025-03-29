@@ -3,11 +3,11 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
 use Closure;
-use zay\Request;
-use zay\Response;
+use net\phpm\framework\Request;
+use net\phpm\framework\Response;
 
 final class Handler {
 

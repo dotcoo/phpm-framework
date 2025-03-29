@@ -3,9 +3,9 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
-use zay\exceptions\VerifyFailException;
+use net\phpm\framework\exceptions\VerifyFailException;
 
 // o{username用户名.s8-16/^[a-zA-Z]\\w{7-15}$/"请输入用户名!"}
 // o{ 键 中文名称.(点分隔符) 类型(小写必填 大写选填) 最小值(可省略)-(可省略)最大值 (默认值) /xxx/(正则表达式 不支持flags) |错误提示| }

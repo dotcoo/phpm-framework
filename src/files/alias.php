@@ -3,5 +3,5 @@
 
 declare(strict_types=1);
 
-class_alias(\zay\ArrayList::class, 'ArrayList');
-class_alias(\zay\App::class, 'App');
+class_alias(net\phpm\framework\ArrayList::class, 'ArrayList');
+class_alias(net\phpm\framework\App::class, 'App');

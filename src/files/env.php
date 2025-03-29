@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 // 根目录
-defined('APP_ROOT') || define('APP_ROOT', realpath(__DIR__.'/../../../../../'));
+defined('APP_ROOT') || define('APP_ROOT', dirname(__DIR__, 5));
 
 // .env
 foreach (parse_ini_file(APP_ROOT.'/.env') as $name => $value) {
@@ -29,7 +29,7 @@ defined('APP_ENV') || define('APP_ENV', $_ENV['APP_ENV'] ?? 'production');
 defined('APP_DEBUG') || define('APP_DEBUG', ($_ENV['APP_DEBUG'] ?? 'false') == 'true');
 
 // 安全密钥
-defined('APP_SECRET') || define('APP_SECRET', $_ENV['APP_SECRET'] ?? 'zay');
+defined('APP_SECRET') || define('APP_SECRET', $_ENV['APP_SECRET'] ?? 'phpm');
 
 // app目录
 defined('APP_SRC') || define('APP_SRC', APP_ROOT.($_ENV['APP_SRC'] ?? '/src'));

@@ -3,7 +3,7 @@
 
 declare(strict_types=1);
 
-namespace zay\interfaces;
+namespace net\phpm\framework\interfaces;
 
 use Closure;
 

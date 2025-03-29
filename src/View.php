@@ -3,11 +3,11 @@
 
 declare(strict_types=1);
 
-namespace zay;
+namespace net\phpm\framework;
 
 use Closure;
 
-use zay\exceptions\ViewException;
+use net\phpm\framework\exceptions\ViewException;
 
 final class View {
 
@@ -21,8 +21,8 @@ final class View {
     $code = preg_replace("/\\r+/",                                          "",                                                                                 $code);
     $code = preg_replace("/\\n+/",                                          "\n",                                                                               $code);
     $code = substr(preg_replace_callback("/\?>(.*?)<\?/ms",                 fn(array $m) => str_replace("'", "\\'", $m[0]), "?>$code<?"), 2, -2);
-    $code = preg_replace("/<\?=view\(['\"](.+?)['\"], ?(.+?)\)\?>/",        "' . \\zay\\View::view(\\zay\\View::relative(\$___handler, '\\1'), \2) . '",        $code);
-    $code = preg_replace("/<\?=view\(['\"](.+?)['\"]\)\?>/",                "' . \\zay\\View::view(\\zay\\View::relative(\$___handler, '\\1'), \$___data) . '", $code);
+    $code = preg_replace("/<\?=view\(['\"](.+?)['\"], ?(.+?)\)\?>/",        "' . \\net\\phpm\\framework\\View::view(\\net\\phpm\\framework\\View::relative(\$___handler, '\\1'), \2) . '",        $code);
+    $code = preg_replace("/<\?=view\(['\"](.+?)['\"]\)\?>/",                "' . \\net\\phpm\\framework\\View::view(\\net\\phpm\\framework\\View::relative(\$___handler, '\\1'), \$___data) . '", $code);
     $code = preg_replace("/<\?=html\((.+?)\)\?>/",                          "' . strval($1) . '",                                                               $code);
     $code = preg_replace("/<\?=(.+?)\?>/",                                  "' . htmlspecialchars(strval($1)) . '",                                             $code);
     $code = preg_replace_callback("/htmlspecialchars\(strval(\(.+?)\)\);/", Closure::fromCallable([static::class, "variables_callback"]),                       $code);
@@ -68,7 +68,7 @@ final class View {
       $args = array_map("trim", empty($args) ? array() : explode(",", $args));
       $args = empty($args) ? "" : ", " . implode(", ", $args);
       if (array_key_exists($func, static::$pipes)) {
-        $code = sprintf("\\zay\\View::\$pipes['%s'](%s%s", $func, $code, $args);
+        $code = sprintf("\\net\\phpm\\framework\\View::\$pipes['%s'](%s%s", $func, $code, $args);
       } else {
         $code = sprintf("%s(%s%s)", $func, $code, $args);
       }
