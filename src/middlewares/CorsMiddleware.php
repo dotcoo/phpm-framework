@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -14,7 +14,7 @@ class CorsMiddleware extends Middleware {
     $module = $request->module;
     $allowOrigin = $module->config('cors.allowOrigin', '*');
     $origin = $request->getHeader('Origin');
-    $allowOrigins = array_map('trim', explode2(',', $allowOrigin));
+    $allowOrigins = array_map('trim', explode1(',', $allowOrigin));
     if (!($allowOrigin === '*' || in_array($origin, $allowOrigins))) {
       $response->error('reject');
     }

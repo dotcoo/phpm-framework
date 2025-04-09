@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -176,9 +176,9 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
     if ($num < 1) {
       return new static();
     } elseif ($num === 1) {
-      return new static([$this->___data[array_rand()]]);
+      return new static([$this->___data[array_rand($this->___data)]]);
     } elseif ($num >= $this->count()) {
-      return new static($this->data);
+      return new static($this->___data);
     } else {
       $l = new static();
       foreach (array_rand($this->___data, $num) as $k) {
@@ -189,7 +189,6 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
   }
 
   public function reduce(Closure $callback, mixed $initial = 0) : mixed {
-    // return array_reduce($this->___data, $callback, $initial);
     $a = $initial;
     foreach ($this->___data as $i => $v) {
       $a = $callback($a, $v, $i, $this->___data);
@@ -198,15 +197,12 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
   }
 
   public function reduceRight(Closure $callback, mixed $initial = 0) : mixed {
-    // return array_reduce(array_reverse($this->___data), $callback, $initial);
     $a = $initial;
     foreach (array_reverse($this->___data) as $i => $v) {
       $a = $callback($a, $v, $i, $this->___data);
     }
     return $a;
   }
-
-  // ====== foreach ======
 
   public function find(Closure $callback, mixed $defval = null) : mixed {
     foreach ($this->___data as $i => $v) {
@@ -283,7 +279,7 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
           $stacks->enqueue([$arr, $i]);
           $stacks->enqueue([$item, 0]);
         } else {
-          $list[] = $item;
+          array_push($list, $item);
         }
       }
     }
@@ -303,12 +299,10 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
     return $this;
   }
 
-  // ====== array ======
-
   public function toColumn(Closure $callback) : array {
     $map = [];
     foreach ($this->___data as $i => $v) {
-      $map[] = $callback($v, $i, $this->___data);
+      array_push($map, $callback($v, $i, $this->___data));
     }
     return $map;
   }
@@ -335,15 +329,13 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
     return $map;
   }
 
-  // ====== tree ======
-
-  public function toTree2(?object $parent = null, mixed $pid = 0, string $pidKey = 'pid', string $idKey = 'id', int $level = 0) : static {
+  public function toTree0(?object $parent = null, mixed $pid = 0, string $pidKey = 'pid', string $idKey = 'id', int $level = 0) : static {
     $tree = new static();
     foreach ($this->___data as $v) {
       if ($v->$pidKey !== $pid) { continue; }
       $v->level = $level;
       $v->parent = $parent;
-      $v->children = $this->toTree($v, $v->$idKey, $pidKey, $idKey, $level + 1);
+      $v->children = $this->toTree0($v, $v->$idKey, $pidKey, $idKey, $level + 1);
       $tree->push($v);
     }
     return $tree;
@@ -371,7 +363,7 @@ final class ArrayList implements ArrayAccess, Countable, IteratorAggregate, Seri
       $v->children = $v->children ? $v->children : new static();
       $v->children->eachTree($callback);
     }
-    return this;
+    return $this;
   }
 
   public function mapTree(Closure $callback) : static {

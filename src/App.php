@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -91,12 +91,12 @@ final class App {
   }
 
   private function initSql() : void {
-    $host     = env('APP_DB_HOST',     '127.0.0.1'); // 默认主机
-    $port     = env('APP_DB_PORT',     '3306');      // 默认端口
-    $username = env('APP_DB_USERNAME', 'root');      // 默认账户
-    $password = env('APP_DB_PASSWORD', 'root');      // 默认密码
-    $dbname   = env('APP_DB_DBNAME',   'phpm');      // 默认数据库名称
-    $charset  = env('APP_DB_CHARSET',  'utf8mb4');   // 默认字符集
+    $host     = env('APP_DB_HOST',     '127.0.0.1');
+    $port     = env('APP_DB_PORT',     '3306');
+    $username = env('APP_DB_USERNAME', 'root');
+    $password = env('APP_DB_PASSWORD', 'root');
+    $dbname   = env('APP_DB_DBNAME',   'phpm');
+    $charset  = env('APP_DB_CHARSET',  'utf8mb4');
     $dsn      = env('APP_DB_DSN', sprintf("mysql:host=%s:%d;dbname=%s;charset=%s;", $host, $port, $dbname, $charset));
     $options = array(
       PDO::ATTR_PERSISTENT => true,
@@ -113,13 +113,13 @@ final class App {
     $module = $this->modules[1];
     if (APP_ENGINE == 'swoole') {
       $urls = [
-        $url,                                     // /admin/user/detail
-        $module->fullurl . $url,                  // /user/detail -> /index/user/detail
-        $module->fullurl . $url . '/index',       // /user        -> /index/user/index
-        $module->fullurl . '/index' . $url,       // /user        -> /index/index/user
-        $module->fullurl . $url . '/index/index', // ""           -> /index/index/index
-        $url . '/index',                          // /admin/user  -> /admin/user/index
-        $url . '/index/index',                    // /admin       -> /admin/index/index
+        $url,
+        $module->fullurl . $url,
+        $module->fullurl . $url . '/index',
+        $module->fullurl . '/index' . $url,
+        $module->fullurl . $url . '/index/index',
+        $url . '/index',
+        $url . '/index/index',
       ];
       foreach ($urls as $u) {
         if (array_key_exists($u, $this->urls)) {
@@ -191,7 +191,7 @@ final class App {
       $controller = new $namespaceClassname();
       $controller->app = $module->app;
       $controller->module = $module;
-      $controller->name = $c; // pascal2camel(substr($classname, 0, -10));
+      $controller->name = $c;
       $controller->fullname = $module->fullname.'/'.$controller->name;
       $controller->url = camel2kebab($controller->name);
       $controller->fullurl = $module->fullurl.'/'.$controller->url;
@@ -200,14 +200,11 @@ final class App {
       $handle->app = $module->app;
       $handle->module = $module;
       $handle->controller = $controller;
-      $handle->name = $t; // pascal2camel($method->name);
+      $handle->name = $t;
       $handle->fullname = $module->fullname.'/'.$controller->name.'/'.$handle->name;
       $handle->url = camel2kebab($handle->name);
       $handle->fullurl = $controller->fullurl.'/'.$handle->url;
       $handle->method = Closure::fromCallable([$controller, $t]);
-
-      // TODO session_set_save_handler(new SessionHandlerFiles(), true);
-      // TODO session_set_save_handler(new SessionHandlerRedis(), true);
       session_start();
       $request->_SESSION = $_SESSION;
     }
@@ -228,8 +225,13 @@ final class App {
     $data['errno'] = $e->getCode();
     $data['errmsg'] = $e->getMessage();
     if (APP_DEBUG) {
-      $data['errfile'] = $e->getErrorFile();
-      $data['errline'] = $e->getErrorLine();
+      if ($e instanceof Exception) {
+        $data['errfile'] = $e->getErrorFile();
+        $data['errline'] = $e->getErrorLine();
+      } else {
+        $data['errfile'] = $e->getFile();
+        $data['errline'] = $e->getLine();
+      }
     }
     $response->write(json_encode_object($data));
   }
@@ -242,10 +244,9 @@ final class App {
     }
     \Swoole\Runtime::enableCoroutine();
     \Swoole\Coroutine\run(function() {
+      echo sprintf("%s http://%s:%s\n", date('Y-m-d H:i:s'), APP_SWOOLE_HOST, APP_SWOOLE_PORT);
       $mimes = require __DIR__.'/files/mime.php';
       $server = new \Swoole\Coroutine\Http\Server(APP_SWOOLE_HOST, APP_SWOOLE_PORT, false);
-      // $server->handle('/favicon.ico', function($req, $res) { $res->status(404); });
-      // $server->handle('/reboot.txt', function($req, $res) { $res->status(404); });
       $server->handle('/', function($req, $res) use ($mimes) {
         $file = APP_PUBLIC.$req->server['request_uri'];
         if (is_file($file)) {

@@ -1,16 +1,11 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
 namespace net\phpm\framework;
 
 use net\phpm\framework\exceptions\VerifyFailException;
-
-// o{username用户名.s8-16/^[a-zA-Z]\\w{7-15}$/"请输入用户名!"}
-// o{ 键 中文名称.(点分隔符) 类型(小写必填 大写选填) 最小值(可省略)-(可省略)最大值 (默认值) /xxx/(正则表达式 不支持flags) |错误提示| }
-
-// 参数规则
 final class Verify {
 
   private string $text = '';
@@ -26,22 +21,16 @@ final class Verify {
     $this->len = mb_strlen($text);
     $this->advance();
   }
-
-  // 前进
   private function advance() : static {
     $this->current = ++$this->pos < $this->len ? mb_substr($this->text, $this->pos, 1) : '';
     return $this;
   }
-
-  // 跳过空白
   private function skipWhitespace() : static {
     while ($this->current !== '' && ctype_space($this->current)) {
       $this->advance();
     }
     return $this;
   }
-
-  // 左小括号
   private function readLParentheses() : void {
     if ($this->current === '(') {
       $this->advance()->skipWhitespace();
@@ -49,8 +38,6 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 [ 找到了 {$this->current}");
     }
   }
-
-  // 右小括号
   private function readRParentheses() : void {
     if ($this->current === ')') {
       $this->advance()->skipWhitespace();
@@ -58,8 +45,6 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 ] 找到了 {$this->current}");
     }
   }
-
-  // 左中括号
   private function readLBrackets() : void {
     if ($this->current === '[') {
       $this->advance()->skipWhitespace();
@@ -67,8 +52,6 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到[ 找到了{$this->current}");
     }
   }
-
-  // 右中括号
   private function readRBrackets() : void {
     if ($this->current === ']') {
       $this->advance()->skipWhitespace();
@@ -76,8 +59,6 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到] 找到了{$this->current}");
     }
   }
-
-  // 左大括号
   private function readLBraces() : void {
     if ($this->current === '{') {
       $this->advance()->skipWhitespace();
@@ -85,8 +66,6 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到{ 找到了{$this->current}");
     }
   }
-
-  // 右大括号
   private function readRBraces() : void {
     if ($this->current === '}') {
       $this->advance()->skipWhitespace();
@@ -94,13 +73,9 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到} 找到了{$this->current}");
     }
   }
-
-  // 是否双引号
   private function isDoubleQuotes() : bool {
     return $this->current === '"';
   }
-
-  // 双引号
   private function readDoubleQuotes() : void {
     if ($this->current === '"') {
       $this->advance()->skipWhitespace();
@@ -108,13 +83,9 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 \" 找到了 {$this->current}");
     }
   }
-
-  // 是否单引号
   private function isSingleQuotes() : bool {
     return $this->current === "'";
   }
-
-  // 单引号
   private function readSingleQuotes() : void {
     if ($this->current === "'") {
       $this->advance()->skipWhitespace();
@@ -122,13 +93,9 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 ' 找到了 {$this->current}");
     }
   }
-
-  // 是否逗号
   private function isComma() : bool {
     return $this->current === ',';
   }
-
-  // 逗号
   private function readComma() : void {
     if ($this->current === ',') {
       $this->advance()->skipWhitespace();
@@ -136,13 +103,9 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 , 找到了 {$this->current}");
     }
   }
-
-  // 是否斜杠
   private function isSlash() : bool {
     return $this->current === '/';
   }
-
-  // 斜杠
   private function readSlash() : void {
     if ($this->current === '/') {
       $this->advance()->skipWhitespace();
@@ -150,8 +113,6 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 / 找到了 {$this->current}");
     }
   }
-
-  // 竖线
   private function readVertical() : void {
     if ($this->current === '|') {
       $this->advance()->skipWhitespace();
@@ -159,30 +120,20 @@ final class Verify {
       throw new VerifyFailException("rules: {$this->text}, pos: {$this->pos}, 没有找到 | 找到了 {$this->current}");
     }
   }
-
-  // 是否点号
   private function isDot() : bool {
     return $this->current === '.';
   }
-
-  // 点号
   private function readDot() : void {
     if ($this->current === '.') {
       $this->advance()->skipWhitespace();
     }
   }
-
-  // 结尾
   private function isEnd() : bool {
-    return $this->current !== '' && parg_match('/^(\.|,|\/|\(|\)|\[|\]|\{|\}|\s)$/', $this->current);
+    return $this->current !== '' && preg_match('/^(\.|,|\/|\(|\)|\[|\]|\{|\}|\s)$/', $this->current);
   }
-
-  // 是否节点
   private function isNode() : bool {
     return in_array($this->current, ['b', 'B', 'i', 'I', 'u', 'U', 'y', 'Y', 'f', 'F', 'g', 'G', 'h', 'H', 's', 'S', 'a', 'A', 'o', 'O']);
   }
-
-  // 类型
   private function readType() : array {
     $node = null;
     if ($this->current === 'b') {
@@ -225,6 +176,10 @@ final class Verify {
       $node = [ 'type' => 'object', 'required' => true ];
     } else if ($this->current === 'O') {
       $node = [ 'type' => 'object', 'required' => false ];
+    } else if ($this->current === 'm') {
+      $node = [ 'type' => 'mixed', 'required' => true ];
+    } else if ($this->current === 'M') {
+      $node = [ 'type' => 'mixed', 'required' => false ];
     } else {
       return [ 'type' => 'string', 'required' => true ];
     }
@@ -232,13 +187,9 @@ final class Verify {
     $this->readDot();
     return $node;
   }
-
-  // 是否默认值
   private function isDefaultBegin() : bool {
     return $this->current === '(';
   }
-
-  // 默认值
   private function readDefaultValue() : string {
     if (!$this->isDefaultBegin()) {
       return '';
@@ -262,18 +213,12 @@ final class Verify {
     $this->readDot();
     return $result;
   }
-
-  // 是否数字开始
   private function isNumberBegin() : bool {
     return ctype_digit($this->current) || $this->current === '-';
   }
-
-  // 是否数字
   private function isNumber() : bool {
     return ctype_digit($this->current);
   }
-
-  // 数字
   private function readNumber() : int {
     $result = '';
     if ($this->current === '-') {
@@ -287,13 +232,9 @@ final class Verify {
     $this->skipWhitespace();
     return intval($result);
   }
-
-  // 是否float
   private function isFloat() : bool {
     return ctype_digit($this->current);
   }
-
-  // float
   private function readFloat() : float {
     $result = '';
     if ($this->current === '-') {
@@ -316,18 +257,12 @@ final class Verify {
     $this->skipWhitespace();
     return floatval($result);
   }
-
-  // 是否范围开始
   private function isRangeBegin() : bool {
     return $this->isNumber();
   }
-
-  // 是否范围结束
   private function isRangeEnd() : bool {
     return $this->current !== '' && $this->current === ')';
   }
-
-  // 范围
   private function readNumberRange() : array {
     if (!$this->isRangeBegin()) {
       return [null, null];
@@ -344,8 +279,6 @@ final class Verify {
     $this->readDot();
     return [$min, $max];
   }
-
-  // float范围
   private function readFloatRange() : array {
     if (!$this->isRangeBegin()) {
       return [null, null];
@@ -362,18 +295,12 @@ final class Verify {
     $this->readDot();
     return [$min, $max];
   }
-
-  // 是否正则开始
   private function isRegexpBegin() : bool {
     return $this->current === '/';
   }
-
-  // 是否正则开始
   private function isRegexpEnd() : bool {
     return $this->current !== '' && $this->current === '/';
   }
-
-  // 正则
   private function readRegexp() : string {
     if (!$this->isRegexpBegin()) {
       return '';
@@ -399,18 +326,12 @@ final class Verify {
     }
     return $result;
   }
-
-  // 是否消息开始
   private function isRegexpMessageBegin() : bool {
     return $this->current === '|';
   }
-
-  // 是否消息开始
   private function isRegexpMessageEnd() : bool {
     return $this->current !== '' && $this->current === '|';
   }
-
-  // 消息
   private function readRegexpMessage() : string {
     if (!$this->isRegexpMessageBegin()) {
       return '';
@@ -433,13 +354,9 @@ final class Verify {
     $this->readDot();
     return $result;
   }
-
-  // 是否是Key
   private function isKey() : bool {
     return ctype_alnum($this->current) || $this->current === '_';
   }
-
-  // 读取Key
   private function readKey() : string {
     $result = '';
     while ($this->isKey()) {
@@ -448,13 +365,9 @@ final class Verify {
     }
     return $result;
   }
-
-  // 是否标签
   private function isLabel() : bool {
     return $this->isQuotes() || $this->isZH() || $this->isWord();
   }
-
-  // 标签
   private function readLabel() : string {
     if ($this->isQuotes()) {
       return $this->readLabelQuote($this->current);
@@ -467,13 +380,9 @@ final class Verify {
     }
     throw new VerifyFailException('unreachable!');
   }
-
-  // 是否引号标签
   private function isQuotes() : bool {
     return $this->current === '"' || $this->current === "'";
   }
-
-  // 引号标签
   private function readLabelQuote(string $quote) : string {
     $result = '';
     $expect = true;
@@ -494,13 +403,9 @@ final class Verify {
     $this->readDot();
     return $result;
   }
-
-  // 是否中文标签
   private function isZH() : bool {
     return $this->current !== '' && strlen(urlencode($this->current)) >= 9;
   }
-
-  // 中文标签
   private function readLabelZH() : string {
     $result = '';
     while ($this->isZH()) {
@@ -511,13 +416,9 @@ final class Verify {
     $this->readDot();
     return $result;
   }
-
-  // 是否英文单词
   private function isWord() : bool {
     return $this->current !== '' && ctype_alnum($this->current);
   }
-
-  // 英文标签
   private function readLabelAll() : string {
     $result = '';
     while (!$this->isEnd()) {
@@ -530,10 +431,8 @@ final class Verify {
   }
 
   private function readNode($parent) : array {
-    // 读取节点
     $node = $this->readType();
     $this->skipWhitespace();
-    // $node['parent'] = $parent;
     $node['key'] = '';
     $node['label'] = '';
     $node['min'] = null;
@@ -545,87 +444,59 @@ final class Verify {
     $node['fields'] = [];
 
     if ($node['type'] === 'bool') {
-      // 读取默认值
       $node['defval'] = $this->readDefaultValue();
     }
 
     if ($node['type'] === 'int') {
-      // 读取默认值
       $node['defval'] = $this->readDefaultValue();
-
-      // 读取range
       [$node['min'], $node['max']] = $this->readNumberRange();
     }
 
     if ($node['type'] === 'float') {
-      // 读取默认值
       $node['defval'] = $this->readDefaultValue();
-
-      // 读取range
       [$node['min'], $node['max']] = $this->readFloatRange();
     }
 
     if ($node['type'] === 'string') {
-      // 读取默认值
       $node['defval'] = $this->readDefaultValue();
-
-      // 读取range
       [$node['min'], $node['max']] = $node['type'] === 'float' ? $this->readFloatRange() : $this->readNumberRange();
-
-      // 读取格式
       $node['regexp'] = $this->readRegexp() ?: null;
-
-      // 读取格式错误提示
       $node['regexpErrmsg'] = empty($node['regexp']) ? '' : ($this->readRegexpMessage() ?: null);
     }
 
     if ($node['type'] === 'array') {
-      // 读取range
       [$node['min'], $node['max']] = $node['type'] === 'float' ? $this->readFloatRange() : $this->readNumberRange();
 
-      $this->readLBrackets(); // 左中括号
+      $this->readLBrackets();
       $node['item'] = $this->readNode($node);
-      $this->readRBrackets(); // 友中括号
+      $this->readRBrackets();
     }
 
     if ($node['type'] === 'object') {
-      $this->readLBraces(); // 左大括号
+      $this->readLBraces();
       while ($this->isKey()) {
-        // 读取key
         $key = $this->readKey();
-        // 读取label
         $label = $this->isLabel() ? $this->readLabel() : $key;
-        // 读取节点类型
         $fieldNode = $this->readNode($node);
         $fieldNode['key'] = $key;
         $fieldNode['label'] = $label;
-        $node['fields'][] = $fieldNode;
+        array_push($node['fields'], $fieldNode);
         if ($this->isComma()) {
           $this->readComma();
         } else {
           break;
         }
       }
-      $this->readRBraces(); // 右大括号
+      $this->readRBraces();
     }
 
     return $node;
   }
-
-  // 解析
   private function parse() : array {
     return $this->readNode(null);
   }
-
-  // ====== 静态检测 ======
-
-  // 正则表达式映射表
   public static array $regexps = [];
-
-  // 规则缓存
   public static array $rulesCache = [];
-
-  // 解析规则
   public static function parseRules(string $rules) : array {
     if (!array_key_exists($rules, static::$rulesCache)) {
       $paramsRules = new static($rules);
@@ -633,170 +504,133 @@ final class Verify {
     }
     return static::$rulesCache[$rules];
   }
-
-  // 参数验证
   public static function paramsVerify(mixed $val, string $rules, string $fullpath = '', string $label = '', int $depth = 0) : array {
     return static::dataVerify($val, static::parseRules($rules), $fullpath, $label, $depth + 1);
   }
-  
-  // 检查数据
   public static function dataVerify(mixed $val, array $rules, string $fullpath = '', string $label = '', int $depth = 0) : mixed {
-    // 两侧空格
     if (is_string($val)) { $val = trim($val); }
-
-    // 是否为空
     $isEmpty = fn(mixed $val) : bool => $val === null || $val === '' || $val === 'null' || $val === 'NULL';
-
-    // 变量
     $r = $rules;
     $path = substr($fullpath, 1);
-
-    // boolean
     if ($r['type'] === 'bool') {
-      // 默认值
       if ($r['defval'] !== '' && $isEmpty($val)) {
         $val = $r['defval'];
       }
-      // 转换
+      if (!$r['required'] && $isEmpty($val)) {
+        return false;
+      }
       return $val === true || $val === 'true' || $val === 1 || $val === '1';
     }
-
-    // 整数 小数
     if ($r['type'] === 'int' || $r['type'] === 'float') {
-      // 默认值
       if ($r['defval'] !== '' && $isEmpty($val)) {
         $val = $r['defval'];
       }
-      // 必填 没填
-      if ($r['required'] && $isEmpty($val)) {
-        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
-      }
-      // 选填 没填
       if (!$r['required'] && $isEmpty($val)) {
         return 0;
       }
-      // 兼容
+      if ($r['required'] && $isEmpty($val)) {
+        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
+      }
       if (is_string($val) && is_numeric($val)) {
         $val = $val - 0;
       }
       if (is_bool($val)) {
         $val = $val ? 1 : 0;
       }
-      // 类型
       if ($r['type'] === 'int' && !is_int($val) || $r['type'] === 'float' && !(is_int($val) || is_float($val))) {
         throw new VerifyFailException("{$label}必须是一个数字!", 1, $depth + 1, $path);
       }
-      // 负数
       if (!$r['minus'] && $val < 0) {
         throw new VerifyFailException("{$label}不能为负数!", 1, $depth + 1, $path);
       }
-      // 零
       if (!$r['zero'] && $val === 0) {
         throw new VerifyFailException("{$label}不能为0!", 1, $depth + 1, $path);
       }
-      // 最小值
       if ($r['min'] !== null && $val < $r['min']) {
         throw new VerifyFailException("{$label}最小为{$r['min']}!", 1, $depth + 1, $path);
       }
-      // 最大值
       if ($r['max'] !== null && $val > $r['max']) {
         throw new VerifyFailException("{$label}最大为{$r['max']}!", 1, $depth + 1, $path);
       }
       return $val;
     }
-
-    // 字符串
     if ($r['type'] === 'string') {
-      // 默认值
       if ($r['defval'] !== '' && $isEmpty($val)) {
         $val = $r['defval'];
       }
-      // 必填 没填
-      if ($r['required'] && $isEmpty($val)) {
-        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
-      }
-      // 选填 没填
       if (!$r['required'] && $isEmpty($val)) {
         return '';
       }
-      // 兼容
+      if ($r['required'] && $isEmpty($val)) {
+        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
+      }
       if (is_bool($val)) {
         $val = $val ? '1' : '0';
       }
-      // 兼容
       if (is_null($val) || is_float($val)) {
         $val = $val + '';
       }
-      // 类型
       if (!is_string($val)) {
         throw new VerifyFailException("{$label}必须是一个字符串!", 1, $depth + 1, $path);
       }
-      // 长度范围
       if ($r['min'] !== null && mb_strlen($val) < $r['min'] || $r['max'] !== null && mb_strlen($val) > $r['max']) {
         throw new VerifyFailException("{$label}长度为{$r['min']}-{$r['max']}位!", 1, $depth + 1, $path);
       }
-      // 正则表达式
       if ($r['regexp'] !== null && !preg_match($r['regexp'], $val)) {
         throw new VerifyFailException(empty($r['regexpErrmsg']) ? "{$label}格式不正确!" : $r['regexpErrmsg'], 1, $depth + 1, $path);
       }
       return $val;
     }
-
-    // 数组
     if ($r['type'] === 'array') {
-      // 必填 没填
+      if (!$r['required'] && $isEmpty($val)) {
+        return [];
+      }
       if ($r['required'] && $isEmpty($val)) {
         throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
       }
-      // 类型
       if (!is_array($val)) {
         throw new VerifyFailException("{$label}必须是一个数组!", 1, $depth + 1, $path);
       }
-      // 必填 空数组
       if ($r['required'] && count($val) === 0) {
         throw new VerifyFailException("{$label}不能为空数组!", 1, $depth + 1, $path);
       }
-      // 选填 没填
-      if (!$r['required'] && $isEmpty($val)) {
-        return [];
-      }
-      // 最小
       if ($r['min'] !== null && count($val) < $r['min']) {
         throw new VerifyFailException("{$label}数量最少{$r['min']}个!", 1, $depth + 1, $path);
       }
-      // 最大
       if ($r['max'] !== null && count($val) > $r['max']) {
         throw new VerifyFailException("{$label}数量最多{$r['max']}个!", 1, $depth + 1, $path);
       }
-      // 数组元素
       $newVal = [];
       foreach ($val as $i => $item) {
         $no = $i + 1;
-        $newVal[] = static::dataVerify($item, $r['item'], "{$fullpath}[{$i}]", "{$label}{$no}", $depth + 1);
+        array_push($newVal, static::dataVerify($item, $r['item'], "{$fullpath}[{$i}]", "{$label}{$no}", $depth + 1));
       }
       return $newVal;
     }
-
-    // 对象
     if ($r['type'] === 'object') {
-      // 必填 没填
-      if ($r['required'] && $isEmpty($val)) {
-        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
-      }
-      // 选填 没填
       if (!$r['required'] && $isEmpty($val)) {
         return [];
       }
-      // 类型
+      if ($r['required'] && $isEmpty($val)) {
+        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
+      }
       if (!is_array($val)) {
         throw new VerifyFailException("{$label}必须是一个对象!", 1, $depth + 1, $path);
       }
-      // 对象元素
       $newVal = [];
       foreach ($r['fields'] as $col) {
         $newVal[$col['key']] = static::dataVerify($val[$col['key']] ?? null, $col, "{$fullpath}.{$col['key']}", "{$label}{$col['label']}", $depth + 1);
       }
       return $newVal;
+    }
+    if ($r['type'] === 'mixed') {
+      if (!$r['required'] && $isEmpty($val)) {
+        return null;
+      }
+      if ($r['required'] && $isEmpty($val)) {
+        throw new VerifyFailException("{$label}不能为空!", 1, $depth + 1, $path);
+      }
+      return $val;
     }
   }
 }

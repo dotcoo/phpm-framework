@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -11,42 +11,24 @@ use net\phpm\framework\interfaces\EventInterface;
 use net\phpm\framework\traits\DynamicTrait;
 use net\phpm\framework\traits\EventTrait;
 use net\phpm\framework\exceptions\ResponseEndException;
-
-// Response 响应
 final class Response implements EventInterface {
 
   use DynamicTrait;
   use EventTrait;
-
-  // 响应行
   public int $status = 200;
   public string $statusText = 'OK';
-
-  // 响应头
   public array $headersList = [];
   public array $headers = [];
-
-  // 响应体
   public mixed $body = '';
-
-  // 响应数据
   public string $responseType = '';
   public array $cookiesList = [];
   public array $cookies = [];
   public array $json = [];
-
-  // 是否结束
   public bool $isEnded = false;
-
-  // Response
   public \Swoole\Http\Response $res;
-
-  // 从php环境创建response对象
   public static function fromFpmResponse() : static {
     return new static();
   }
-
-  // 从php环境创建response对象
   public static function fromSwooleHttpResponse(\Swoole\Http\Response $res) : static {
     $response = new static();
     $response->res = $res;
@@ -75,13 +57,13 @@ final class Response implements EventInterface {
   public function delHeader(string $name) : static {
     $name = strtolower($name);
     $this->headersList = array_filter($this->headersList, fn($v) => $v['name'] !== $name);
-    unsert($this->headers[$name]);
+    unset($this->headers[$name]);
     return $this;
   }
 
   public function addHeader(string $name, string $value = '') : static {
     $name = strtolower($name);
-    $this->headersList[] = compact('name', 'value');
+    array_push($this->headersList, compact('name', 'value'));
     $this->headers[$name] = $value;
     return $this;
   }
@@ -114,7 +96,7 @@ final class Response implements EventInterface {
   }
 
   public function cookie(string $name, string $value = '', int $expire = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false) : void {
-    $this->cookiesList[] = compact('name', 'value', 'expire', 'path', 'domain', 'secure', 'httponly');
+    array_push($this->cookiesList, compact('name', 'value', 'expire', 'path', 'domain', 'secure', 'httponly'));
   }
 
   public function write(string $data) : void {
@@ -156,33 +138,25 @@ final class Response implements EventInterface {
   }
 
   private function sendFpmClient() : void {
-    // 响应行
     http_response_code($this->status);
-    // 响应头
     foreach ($this->headersList as $h) {
       header("{$h['name']}: {$h['value']}");
     }
-    // cookiesList
     foreach ($this->cookiesList as $c) {
       setcookie($c['name'], $c['value'], $c['expire'], $c['path'], $c['domain'], $c['secure'], $c['httponly']);
     }
-    // 响应体
     echo $this->body;
   }
 
   private function sendSwooleClient() : void {
     $res = $this->res;
-    // 响应行
     $res->status($this->status);
-    // 响应头
     foreach ($this->headersList as $h) {
       $res->header($h['name'], $h['value']);
     }
-    // cookiesList
     foreach ($this->cookiesList as $c) {
       $res->cookie($c['name'], $c['value'], $c['expire'], $c['path'], $c['domain'], $c['secure'], $c['httponly']);
     }
-    // 响应体
     $res->end($this->body);
   }
 

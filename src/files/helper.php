@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -36,7 +36,6 @@ function camel2under(string $name) : string {
 function under2camel(string $name) : string {
   static $caches = [];
   return $caches[$name] ?? $caches[$name] = lcfirst(str_replace('_', '', ucwords($name, '_')));
-  // return $caches[$name] ?? $caches[$name] = preg_replace_callback('/_([a-z])/', fn($m) => strtoupper($m[1]), $name);
 }
 
 function camel2pascal(string $name) : string {
@@ -57,26 +56,37 @@ function camel2kebab(string $name) : string {
 function kebab2camel(string $name) : string {
   static $caches = [];
   return $caches[$name] ?? $caches[$name] = lcfirst(str_replace('-', '', ucwords($name, '-')));
-  // return $caches[$name] ?? $caches[$name] = preg_replace_callback('/-([a-z])/', fn($m) => strtoupper($m[1]), $name);
 }
 
 function env(string $name, mixed $defval = null) : bool|int|float|string|array|object {
   return $_ENV[$name] ?? $defval;
 }
 
-function implode2(?array $array) : string {
-  return empty($array) ? '' : implode(',', $array);
+function implode0(string $separator, ?array $array) : string {
+  return empty($array) ? '' : implode($separator, $array);
 }
 
-function explode2(?string $string) : array {
-  return empty($string) ? [] : explode(',', $string);
+function implode1(?array $array) : string {
+  return implode0(',', $array);
 }
 
-function json_encode2(mixed $value) : string {
+function explode0(string $separator, ?string $string) : array {
+  return empty($string) ? [] : array_map('trim', explode($separator, $string));
+}
+
+function explode1(?string $string) : array {
+  return explode0(',', $string);
+}
+
+function explode1n(?string $string) : array {
+  return array_map('intval', explode1($string));
+}
+
+function json_encode0(mixed $value) : string {
   return json_encode($value, JSON_INVALID_UTF8_IGNORE | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 }
 
-function json_decode2(?string $value) : mixed {
+function json_decode0(?string $value) : mixed {
   return json_decode($value, true, 512, JSON_INVALID_UTF8_IGNORE | JSON_BIGINT_AS_STRING | JSON_OBJECT_AS_ARRAY);
 }
 
@@ -116,7 +126,7 @@ function fileext(string $filename) : string {
   return pathinfo($filename, PATHINFO_EXTENSION);
 }
 
-function mkdir2(string $filename) : string {
+function mkdir0(string $filename) : string {
   $dirname = dirname($filename);
   if (!file_exists($dirname)) {
     mkdir($dirname, 0755, true);
@@ -124,16 +134,7 @@ function mkdir2(string $filename) : string {
   return $filename;
 }
 
-function scanfile2(string $path, string $dir = '', array &$files = []) : array {
-  if (!file_exists("$path$dir")) { return $files; }
-  foreach (scandir("$path$dir") as $file) {
-    if ($file == '.' || $file == '..' || !is_file("$path$dir/$file")) { continue; }
-    array_push($files, $file);
-  }
-  return $files;
-}
-
-function scandir2(string $path, string $dir = '', array &$files = []) : array {
+function scandir0(string $path, string $dir = '', array &$files = []) : array {
   if (!file_exists("$path$dir")) { return $files; }
   foreach (scandir("$path$dir") as $file) {
     if ($file == '.' || $file == '..' || !is_dir("$path$dir/$file")) { continue; }
@@ -142,7 +143,16 @@ function scandir2(string $path, string $dir = '', array &$files = []) : array {
   return $files;
 }
 
-function scanfile3(string $path, string $dir = '', array &$files = []) : array {
+function scanfile0(string $path, string $dir = '', array &$files = []) : array {
+  if (!file_exists("$path$dir")) { return $files; }
+  foreach (scandir("$path$dir") as $file) {
+    if ($file == '.' || $file == '..' || !is_file("$path$dir/$file")) { continue; }
+    array_push($files, $file);
+  }
+  return $files;
+}
+
+function scanfile1(string $path, string $dir = '', array &$files = []) : array {
   if (!file_exists("$path$dir")) { return $files; }
   $recursion = function(string $path, string $dir = '', array &$files = []) use (&$recursion) : array {
     foreach (scandir("$path$dir") as $file) {
@@ -164,7 +174,7 @@ function log_args(mixed ...$args) : array {
       case 'boolean':
       case 'array':
       case 'object':
-        $args[$i] = json_encode($a);
+        $args[$i] = json_encode0($a);
         break;
       case 'NULL':
       case 'resource':
@@ -180,11 +190,11 @@ function log_args(mixed ...$args) : array {
 }
 
 function log_debug(mixed ...$args) : void {
-  file_put_contents(mkdir2(APP_LOG . '/' . date('Ymd') . '.log'), date('Y-m-d H:i:s ') . implode(', ', log_args(...$args)) . "\n", FILE_APPEND);
+  file_put_contents(mkdir0(APP_LOG . '/' . date('Ymd') . '.log'), date('Y-m-d H:i:s ') . implode(', ', log_args(...$args)) . "\n", FILE_APPEND);
 }
 
 function log_debugf(string $format, mixed ...$args) : void {
-  file_put_contents(mkdir2(APP_LOG . '/' . date('Ymd') . '.log'), date('Y-m-d H:i:s ') . sprintf($format, ...log_args(...$args)) . "\n", FILE_APPEND);
+  file_put_contents(mkdir0(APP_LOG . '/' . date('Ymd') . '.log'), date('Y-m-d H:i:s ') . sprintf($format, ...log_args(...$args)) . "\n", FILE_APPEND);
 }
 
 function log_debug_return(mixed $retval, mixed ...$args) : mixed {
@@ -270,7 +280,7 @@ function colorfulRand(int $diff = 160) : array {
 }
 
 function captcha(string $code, int $width = 80, int $height = 30, int $x = 12, int $y = 3, int $font_width = 14, int $font_height = 18, bool $rotate = true) : string {
-  $font_file = APP_FONTS . 'arial.ttf';
+  $font_file = APP_FONT . 'arial.ttf';
   $font_size = $font_height;
   $ty = $y + $font_size;
   $dst_image = imagecreatetruecolor($width, $height);
@@ -283,7 +293,7 @@ function captcha(string $code, int $width = 80, int $height = 30, int $x = 12, i
       $tx += $font_width;
     }
   } else {
-    imagettftext($dst_image, $font_size, 0, $x, $ty, $font_color, $font_file, $code);
+    imagettftext($dst_image, $font_size, 0, $x, $ty, imagecolorallocate($dst_image, ...colorfulRand()), $font_file, $code);
   }
   $img_file = fopen('php://memory', 'r+');
   imagepng($dst_image, $img_file);
@@ -303,8 +313,6 @@ function list2tree(array $list, mixed $pid = 0, string $pidKey = 'pid', string $
   }
   return $tree;
 }
-
-// tinyflake: time 32bit + sn 21bit
 function tinyflake(?int $time = null) : int {
   static $t = 0, $r = 0;
   $time = $time ?? time();
@@ -320,11 +328,11 @@ function var_state(mixed $data, int $indent = 0) : string {
     case 'double':
       return $data . '';
     case 'string':
-      return json_encode_any($data);
+      return json_encode($data);
     case 'array':
       $code = "[\n";
       foreach ($data as $key => $val) {
-        $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_any($key), var_state($val, $indent + 1));
+        $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode($key), var_state($val, $indent + 1));
       }
       $code .= str_repeat('  ', $indent) . "]";
       return $code;
@@ -332,14 +340,14 @@ function var_state(mixed $data, int $indent = 0) : string {
       if (is_subclass_of($data, net\phpm\framework\interfaces\StateInterface::class)) {
         $code = $data::class . "::__setState([\n";
         foreach ($data->__getState() as $key => $val) {
-          $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_any($key), var_state($val, $indent + 1));
+          $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode($key), var_state($val, $indent + 1));
         }
         $code .= str_repeat('  ', $indent) . "])";
         return $code;
       } else {
         $code = "[\n";
         foreach ($data->__getState() as $key => $val) {
-          $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode_any($key), var_state($val, $indent + 1));
+          $code .= sprintf("%s%s => %s,\n", str_repeat('  ', $indent + 1), json_encode($key), var_state($val, $indent + 1));
         }
         $code .= str_repeat('  ', $indent) . "]";
         return $code;
@@ -357,10 +365,46 @@ function var_state(mixed $data, int $indent = 0) : string {
   }
 }
 
+function array_expand(array $array, int ...$ns) : array {
+  $a = [];
+  $i = 0;
+  foreach ($ns as $n) {
+    if ($n == 0) {
+      array_push($a, $array[$i]);
+      $i += 1;
+    } else {
+      array_push($a, array_slice($array, $i, $n));
+      $i += $n;
+    }
+  }
+  array_push($a, array_slice($array, $i));
+  return $a;
+}
+
 function app() : net\phpm\framework\App {
   return net\phpm\framework\App::getInstance();
 }
 
-function pagination() : string {
-  return 'pagination';
+function arraylist(array $array) : net\phpm\framework\ArrayList {
+  return new net\phpm\framework\ArrayList($array);
+}
+
+function where(string $where, int|float|string|array ...$args) : net\phpm\framework\Sql {
+  return (new net\phpm\framework\Sql())->where($where, ...$args);
+}
+
+function whereByAssoc(array $data) : net\phpm\framework\Sql {
+  return (new net\phpm\framework\Sql())->whereByAssoc($data);
+}
+
+function whereAnd(string|array|net\phpm\framework\Sql ...$wheres) : net\phpm\framework\Sql {
+  return (new net\phpm\framework\Sql())->whereAnd($wheres);
+}
+
+function whereOr(string|array|net\phpm\framework\Sql ...$wheres) : net\phpm\framework\Sql {
+  return (new net\phpm\framework\Sql())->whereOr($wheres);
+}
+
+function dataVerify(array $data, string $rules, int $depth = 1) : array {
+  return net\phpm\framework\Verify::paramsVerify($data, 'o{'.$rules.'}', depth: $depth);
 }

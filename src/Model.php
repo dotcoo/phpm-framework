@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -32,7 +32,7 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
 
   protected static array $___record2props = [];
 
-  public function mergeRecord(array $record) : static { // storage to memory, subclass overwrite
+  public function mergeRecord(array $record) : static {
     foreach($record as $name => $value) {
       $this->___props[$name] = array_key_exists($name, static::$___record2props) ? static::$___record2props[$name]($value, $record, $this) : $value;
     }
@@ -41,7 +41,7 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
 
   protected static array $___prop2records = [];
 
-  public function toRecord() : array { // memory to storage, subclass overwrite
+  public function toRecord() : array {
     $record = [];
     foreach($this->___props as $name => $value) {
       $record[$name] = array_key_exists($name, static::$___prop2records) ? static::$___prop2records[$name]($value, $record, $this) : $value;
@@ -78,201 +78,123 @@ abstract class Model implements ArrayAccess, Countable, IteratorAggregate, Seria
   }
 
   public static function find(mixed ...$ids) : ?static {
-    return static::new()->newSql()->whereByPk(...$ids)->select();
+    return static::new()->newSqlCall()->whereByPk(...$ids)->select();
   }
 
   protected function ___call(string $name, array $args) : mixed {
     $nameMethod = $name.'Call';
     if (method_exists($this, $nameMethod)) {
-      $this->$nameMethod($value);
+      $this->$nameMethod(...$args);
     } elseif (array_key_exists($name, static::$___callMethods)) {
       return static::$___callMethods[$name]->call($this, ...$args);
     } else {
-      return $this->newSql()->$name(...$args);
+      return $this->newSqlCall()->$name(...$args);
     }
   }
-
-  // 删除模式
-  const MODE_DELETE = 1; // 物理删除
-  const MODE_MARK = 2; // 标记删除
-  const MODE_MARK_DELETE = 3; // 先标记删除,再物理删除
-
-  // 数据库连接
+  const MODE_DELETE = 1;
+  const MODE_MARK = 2;
+  const MODE_MARK_DELETE = 3;
   public static ?PDO $conn = null;
-
-  // 数据库名称
   public static ?string $database = null;
-
-  // 表名
   public static ?string $table = null;
-
-  // 别名
   public static ?string $alias = null;
-
-  // 主键
   public static ?array $pks = null;
-
-  // 是否主键自增
   public static ?bool $autoIncrement = null;
-
-  // 是否有时间列
   public static ?bool $autoTimeColumn = null;
-
-  // 删除模式
   public static ?int $deleteMode = null;
-
-  // 数据库连接
   protected ?PDO $_conn = null;
-
-  // 数据库名称
   protected ?string $_database = null;
-
-  // 表名
   protected ?string $_table = null;
-
-  // 别名
   protected ?string $_alias = null;
-
-  // 主键
   protected ?array $_pks = null;
-
-  // 是否主键自增
   protected ?bool $_autoIncrement = null;
-
-  // 是否有时间列
   protected ?bool $_autoTimeColumn = null;
-
-  // 删除模式
   protected ?int $_deleteMode = null;
-
-  // 设置当前实体对象的数据库连接对象
   public function setConn(?PDO $conn) : static {
     $this->_conn = $conn; return $this;
   }
-
-  // 获取当前实体对象的数据库连接对象
   public function getConn() : ?PDO {
-    // TODO 需要连接池
-    return $this->_conn ?? $this::class::$conn ?? null; // ?: MySQLPool->getInstance()->get();
+    return $this->_conn ?? static::$conn ?? null;
   }
-
-  // 设置当前实体对象的数据库名
   public function setDatabase(?string $database) : static {
-    return $this->_database = $database; return $this;
+    $this->_database = $database; return $this;
   }
-
-  // 获取当前实体对象的数据库名
   public function getDatabase() : string {
-    return $this->_database ?? $this::class::$database ?? '';
+    return $this->_database ?? static::$database ?? '';
   }
-
-  // 设置当前实体对象的表名
   public function setTable(?string $table) : static {
     $this->_table = $table; return $this;
   }
-
-  // 获取当前实体对象的表名
   public function getTable() : string {
-    return env('APP_DB_PREFIX') . ($this->_table ?? $this::class::$table ?? camel2under(pascal2camel(substr(static::class, strrpos(static::class, '\\') + 1))));
+    return env('APP_DB_PREFIX') . ($this->_table ?? static::$table ?? camel2under(pascal2camel(substr(static::class, strrpos(static::class, '\\') + 1))));
   }
-
-  // 设置当前实体对象的别名
   public function setAlias(?string $alias) : static {
     $this->_alias = $alias; return $this;
   }
-
-  // 获取返回当前实体对象的别名
   public function getAlias() : string {
-    return $this->_alias ?? $this::class::$alias ?? '';
+    return $this->_alias ?? static::$alias ?? '';
   }
-
-  // 设置当前实体对象的主键名
   public function setPks(?array $pks) : static {
     $this->_pks = $pks; return $this;
   }
-
-  // 获取当前实体对象的主键名
   public function getPks() : array {
-    return $this->_pks ?? $this::class::$pks ?? ['id'];
+    return $this->_pks ?? static::$pks ?? ['id'];
   }
-
-  // 设置是否为自增主键
   public function setAutoIncrement(?bool $autoIncrement) : static {
     $this->_autoIncrement = $autoIncrement; return $this;
   }
-
-  // 获取是否为自增主键
   public function getAutoIncrement() : bool {
-    return $this->_autoIncrement ?? $this::class::$autoIncrement ?? true;
+    return $this->_autoIncrement ?? static::$autoIncrement ?? true;
   }
-
-  // 设置是否有时间列
   public function setAutoTimeColumn(?bool $autoTimeColumn) : static {
     $this->_autoTimeColumn = $autoTimeColumn; return $this;
   }
-
-  // 是否自动添加时间字段
   public function getAutoTimeColumn() : bool {
-    return $this->_autoTimeColumn ?? $this::class::$autoTimeColumn ?? true;
+    return $this->_autoTimeColumn ?? static::$autoTimeColumn ?? true;
   }
-
-  // 设置删除模式
   public function setDeleteMode(string $deleteMode) : static {
     $this->_deleteMode = $deleteMode; return $this;
   }
-
-  // 获取删除模式
   public function getDeleteMode() : int {
-    return $this->_deleteMode ?? $this::class::$deleteMode ?? $this::class::MODE_MARK;
+    return $this->_deleteMode ?? static::$deleteMode ?? static::MODE_MARK;
   }
-
-  // 创建Sql
-  public function newSql() : Sql {
+  public function newSqlCall() : Sql {
     return (new Sql())->model($this);
   }
-
-  // 添加数据
   public function add(string ...$columns) : Sql {
     $columns = !empty($columns) ? $columns : array_keys($this->___changes);
-    return $this->ignoreChange($this->newSql()->cols(...$columns)->insert());
+    return $this->ignoreChange($this->newSqlCall()->cols(...$columns)->insert());
   }
-
-  // 编辑数据
   public function edit(string ...$columns) : Sql {
     $columns = !empty($columns) ? $columns : array_keys($this->___changes);
-    return $this->ignoreChange($this->newSql()->sets(...$columns)->whereMyPk()->update());
+    return $this->ignoreChange($this->newSqlCall()->sets(...array_diff($columns, $this->getPks()))->whereMyPk()->update());
   }
-
-  // 根据数据中的id, 删除数据
   public function del() : Sql {
-    return $this->ignoreChange($this->newSql()->whereMyPk()->delete());
+    return $this->ignoreChange($this->newSqlCall()->whereMyPk()->delete());
   }
-
-  // 保存数据
   public function save(string ...$columns) : Sql {
     return $this->exists() ? $this->edit(...$columns) : $this->add(...$columns);
   }
-
-  // 加载数据
   public function load(string ...$columns) : ?static {
-    $model = $this->newSql()->columns(...$columns)->whereMyPk()->select();
+    $model = $this->newSqlCall()->columns(...$columns)->whereMyPk()->select();
     return $model === null ? null : $this->mergeArray($model->toArray());
   }
-
-  // 是否存在
+  public function getIds() : array {
+    $ids = [];
+    foreach ($this->getPks() as $pk) {
+      $ids[$pk] = $this->___props[$pk] ?? null;
+    }
+    return $ids;
+  }
   public function exists() : bool {
     foreach ($this->getPks() as $pk) {
       if (empty($this->___props[$pk])) { return false; }
     }
     return true;
   }
-
-  // 值
   public function getValue() : mixed {
     return $this->id;
   }
-
-  // 标签
   public function getLabel() : mixed {
     return $this->name;
   }

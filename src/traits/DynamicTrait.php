@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -46,7 +46,7 @@ trait DynamicTrait {
   protected function ___call(string $name, array $args) : mixed {
     $nameMethod = $name.'Call';
     if (method_exists($this, $nameMethod)) {
-      $this->$nameMethod($value);
+      $this->$nameMethod(...$args);
     } elseif (array_key_exists($name, static::$___callMethods)) {
       return static::$___callMethods[$name]->call($this, ...$args);
     } else {

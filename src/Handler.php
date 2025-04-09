@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -27,14 +27,11 @@ final class Handler {
 
   public ?Closure $method = null;
 
-
   public function handle(Request $request, Response $response) : void {
     $request->app = $response->app = $this->app;
     $request->module = $response->module = $this->module;
     $request->controller = $response->controller = $this->controller;
     $request->handler = $response->handler = $this;
-
-    // 请求中间件
     $middlewares = [];
     $module = $this->module;
     while ($module) {
@@ -44,12 +41,7 @@ final class Handler {
     foreach ($middlewares as $middleware) {
       $middleware->handleRequest($request, $response);
     }
-
-    // 处理
-    // $this->method->call(null, [$request, $response]);
     ($this->method)($request, $response);
-
-    // 响应中间件
     foreach (array_reverse($middlewares) as $middleware) {
       $middleware->handleResponse($request, $response);
     }

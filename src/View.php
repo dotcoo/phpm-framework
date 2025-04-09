@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -28,7 +28,7 @@ final class View {
     $code = preg_replace_callback("/htmlspecialchars\(strval(\(.+?)\)\);/", Closure::fromCallable([static::class, "variables_callback"]),                       $code);
     $code = preg_replace("/\n?\s*<\?php/",                                  "';",                                                                               $code);
     $code = preg_replace("/\?>\s*\n?/",                                     "\$___html .= '",                                                                   $code);
-    file_put_contents(mkdir2($target), "<?php\nreturn function(array \$___data = []) : string {\nextract(\$___data);\n\$___handler = '$handler';\n\$___html = '$code';\nreturn \$___html;\n};\n");
+    file_put_contents(mkdir0($target), "<?php\nreturn function(array \$___data = []) : string {\nextract(\$___data);\n\$___handler = '$handler';\n\$___html = '$code';\nreturn \$___html;\n};\n");
   }
 
   public static function view(string $handler, array $data) : string {
@@ -61,10 +61,6 @@ final class View {
     $code = array_shift($pipes);
     foreach ($pipes as $pipe) {
       list($func, $args) = array_merge(explode("(", $pipe, 2), [""]);
-      // if ($func == "expr") {
-      //   $code = sprintf((strpos($args, "%s") === false ? "%s " : "") . $args, $code);
-      //   continue;
-      // }
       $args = array_map("trim", empty($args) ? array() : explode(",", $args));
       $args = empty($args) ? "" : ", " . implode(", ", $args);
       if (array_key_exists($func, static::$pipes)) {

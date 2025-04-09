@@ -1,12 +1,9 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
-namespace zay;
-
-use zay\Request;
-use zay\Response;
+namespace net\phpm\framework;
 
 abstract class Middleware {
 

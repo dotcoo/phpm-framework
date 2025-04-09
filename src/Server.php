@@ -1,11 +1,11 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
 namespace net\phpm\framework;
 
-use \Swoole\Process;
+require_once __DIR__ . '/files/env.php';
 
 final class Server {
 
@@ -15,18 +15,16 @@ final class Server {
     return static::$instance ?? static::$instance = new static();
   }
 
-  private string $appRoot = '';
-
-  private string $appSrc = '';
+  private array $dirs = [APP_SRC];
 
   private int $size = 0;
 
-  private ?Process $process = null;
+  private ?\Swoole\Process $process = null;
 
-  private function __construct() {
-    // $this->appRoot = str_replace(DIRECTORY_SEPARATOR, '/', realpath(__DIR__.'/../../../../'));
-    $this->appRoot = realpath(__DIR__.'/../../../../');
-    $this->appSrc = $this->appRoot . '/src';
+  private function __construct() {}
+
+  public function watch(string ...$dirs) : void {
+    array_push($this->dirs, ...$dirs);
   }
 
   public function reload() : void {
@@ -34,9 +32,9 @@ final class Server {
       $this->process->kill($this->process->pid, SIGTERM);
       $this->process = null;
     }
-    $this->process = new Process(function() {
-      define('APP_ENGINE', 'swoole');
-      require realpath(__DIR__.'/../../../../public/index.php');
+    $this->process = new \Swoole\Process(function() {
+      defined('APP_ENGINE') || define('APP_ENGINE', 'swoole');
+      require realpath(APP_PUBLIC.'/index.php');
     });
     $this->process->start();
   }
@@ -54,8 +52,10 @@ final class Server {
   private function isChange() : bool {
     $size = $this->size;
     $this->size = 0;
-    foreach ($this->scandir($this->appSrc) as $file) {
-      $this->size += filesize($file);
+    foreach ($this->dirs as $dir) {
+      foreach ($this->scandir($dir) as $file) {
+        $this->size += filesize($file);
+      }
     }
     return $this->size !== $size;
   }
@@ -63,6 +63,7 @@ final class Server {
   public function start() : never {
     while (true) {
       if ($this->isChange()) {
+        echo sprintf("%s reload\n", date('Y-m-d H:i:s'));
         $this->reload();
       }
       sleep(1);

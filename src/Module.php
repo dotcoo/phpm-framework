@@ -1,11 +1,11 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
 namespace net\phpm\framework;
 
-use Closure, ReflectionObject, ReflectionMethod, LogicException;
+use Closure, ReflectionClass, ReflectionObject, ReflectionMethod, LogicException;
 
 final class Module {
 
@@ -51,7 +51,7 @@ final class Module {
 
   private function loadConfigs() : void {
     $module = $this;
-    foreach (scanfile2($module->path.'/configs') as $file) {
+    foreach (scanfile0($module->path.'/configs') as $file) {
       if (!str_ends_with($file, '.php')) { continue; }
       $path = $module->path.'/configs/'.$file;
       $default = __DIR__.'/configs/'.$file;
@@ -72,20 +72,18 @@ final class Module {
     $module = $this;
     $config = $module->configs['module'] ?? [];
     $module->name = $module->name ?? $config['name'] ?? filebase($module->path);
-    // $module->fullname = ($module->parent?->fullname ? $module->parent->fullname.'/' : '').$module->name;
     $module->fullname = $module->name;
     $module->url = $module->url ?? $config['url'] ?? camel2kebab($module->name);
     $module->fullurl = str_starts_with($module->url, '/') ? $module->url : ($module->parent === null ? '' : $module->parent->fullurl.'/'.$module->url);
-    $module->app->modules[] = $module;
+    array_push($module->app->modules, $module);
     if (array_key_exists($module->fullname, $module->app->moduleNames)) { throw new LogicException("Duplicate module names: {$module->fullname}! {$module->path}"); }
     $module->app->moduleNames[$module->fullname] = $module;
     $module->app->moduleUrls[$module->fullurl] = $module;
-    // echo "$module->name, $module->fullname, $module->url, $module->fullurl\n";
   }
 
   private function loadHelpers() : void {
     $module = $this;
-    foreach (scanfile3("{$module->path}/helpers") as $file) {
+    foreach (scanfile1("{$module->path}/helpers") as $file) {
       if (!str_ends_with($file, '.php')) { continue; }
       $path = "{$module->path}/helpers/$file";
       require $path;
@@ -106,11 +104,13 @@ final class Module {
   private function loadControllers() : void {
     if (APP_ENGINE === 'fpm') { return; }
     $module = $this;
-    foreach (scanfile2("{$module->path}/controllers") as $file) {
+    foreach (scanfile0("{$module->path}/controllers") as $file) {
       if (!str_ends_with($file, 'Controller.php')) { continue; }
       $path = $module->path.'/controllers/'.$file;
       $classname = substr($file, 0, -4);
       $namespaceClassname = $module->namespace.'\\controllers\\'.$classname;
+      $reflect = new ReflectionClass($namespaceClassname);
+      if ($reflect->isAbstract()) { continue; }
       $controller = new $namespaceClassname();
       $controller->app = $module->app;
       $controller->module = $module;
@@ -118,7 +118,6 @@ final class Module {
       $controller->fullname = $module->fullname.'/'.$controller->name;
       $controller->url = camel2kebab($controller->name);
       $controller->fullurl = $module->fullurl.'/'.$controller->url;
-      // echo "    $controller->name, $controller->fullname, $controller->url, $controller->fullurl\n";
       $module->app->controllers[$controller->fullname] = $controller;
       $reflect = new ReflectionObject($controller);
       foreach ($reflect->getMethods(ReflectionMethod::IS_PUBLIC) as $method) {
@@ -132,7 +131,6 @@ final class Module {
         $handle->url = camel2kebab($handle->name);
         $handle->fullurl = $controller->fullurl.'/'.$handle->url;
         $handle->method = Closure::fromCallable([$controller, $method->name]);
-        // echo "        $handle->name, $handle->fullname, $handle->url, $handle->fullurl\n";
         $module->app->handles[$handle->fullname] = $handle;
         $module->app->urls[$handle->fullurl] = $handle->fullname;
       }
@@ -142,12 +140,12 @@ final class Module {
   private function loadRoutes() : void {
     $module = $this;
     $default = [
-      'url'     => '', // '/news.html' url路径
-      'prefix'  => '', // '/news-' 正则前缀
-      'regexp'  => '', // '#^(?P<id>\d+)\.html$#' 正则表达式 /news-1.html
-      'handler' => '', // 'news/detail' 控制器
-      'get'     => [], // 注入的get参数
-      'post'    => [], // 注入的post参数
+      'url'     => '',
+      'prefix'  => '',
+      'regexp'  => '',
+      'handler' => '',
+      'get'     => [],
+      'post'    => [],
     ];
     $routes = $module->configs['routes'] ?? [];
     foreach ($routes as $route) {
@@ -170,19 +168,9 @@ final class Module {
     $module = $this;
     $pipes = $module->configs['pipe'] ?? [];
     foreach ($pipes as $name => $pipe) {
-      Verify::$pipes[$name] = $pipe;
+      View::$pipes[$name] = $pipe;
       $module->app->pipes[$name] = $pipe;
     }
-  }
-
-  private function scandir(string $path, ) : array {
-    if (!is_dir($path)) { return [$path]; }
-    $files = [];
-    foreach (scandir($path) as $file) {
-      if ($file == '.' || $file == '..') { continue; }
-      array_push($files, ...$this->scandir("$path/$file"));
-    }
-    return $files;
   }
 
   private function loadViews() : void {
@@ -190,7 +178,7 @@ final class Module {
     $module = $this;
     $sourceDir = $module->path.'/views';
     $targetDir = APP_VIEW.'/'.$module->fullname;
-    foreach (scanfile3($sourceDir) as $file) {
+    foreach (scanfile1($sourceDir) as $file) {
       if (!str_ends_with($file, '.view.php')) { continue; }
       $source = $sourceDir.$file;
       $target = substr($targetDir.$file, 0, -9).'.php';
@@ -206,7 +194,7 @@ final class Module {
 
   private function loadModules(string ...$moduleNames) : void {
     $parent = $this;
-    $moduleNames = !empty($moduleNames) ? $moduleNames : scandir2($parent->path.'/modules/');
+    $moduleNames = !empty($moduleNames) ? $moduleNames : scandir0($parent->path.'/modules/');
     foreach ($moduleNames as $moduleName) {
       $path = $parent->path.'/modules/'.$moduleName;
       $module = new static();
@@ -216,8 +204,6 @@ final class Module {
       $module->path = $path;
       $module->namespace = $parent->namespace.'\\modules\\'.$moduleName;
       $module->load();
-      // $parent->modules[$module->name] = $module;
-      // $parent->app->modules[$module->fullname] = $module;
     }
   }
 }

@@ -1,5 +1,4 @@
 <?php
-// Copyright 2020-present The Dotcoo Zhao <dotcoo@163.com>. All rights reserved.
 
 declare(strict_types=1);
 
@@ -10,27 +9,17 @@ use net\phpm\framework\traits\DynamicTrait;
 use net\phpm\framework\traits\EventTrait;
 use net\phpm\framework\exceptions\NotFoundException;
 use net\phpm\framework\exceptions\VerifyException;
-
-// Request 请求
 final class Request implements EventInterface {
 
   use DynamicTrait;
   use EventTrait;
-
-  // 请求行
   public string $method = 'GET';
   public string $uri = '';
   public string $url = '';
-
-  // 请求头
   public array $headersList = [];
   public array $headers = [];
-
-  // 请求体
   public string $contentType = '';
   public mixed $body = null;
-
-  // 请求数据
   public array $server = [];
   public array $get = [];
   public array $post = [];
@@ -39,14 +28,8 @@ final class Request implements EventInterface {
   public array $cookie = [];
   public array $session = [];
   public array $request = [];
-
-  // 路由路径
   public string $routeUrl = '/';
-
-  // 是否结束
   public bool $isEnded = false;
-
-  // 实现
   public ?\Swoole\Http\Request $req = null;
 
   public function setMethod(string $method) : static {
@@ -70,13 +53,13 @@ final class Request implements EventInterface {
   public function delHeader(string $name) : static {
     $name = strtolower($name);
     $this->headersList = array_filter($this->headersList, fn($v) => $v['name'] !== $name);
-    unsert($this->headers[$name]);
+    unset($this->headers[$name]);
     return $this;
   }
 
   public function addHeader(string $name, string $value = '') : static {
     $name = strtolower($name);
-    $this->headersList[] = compact('name', 'value');
+    array_push($this->headersList, compact('name', 'value'));
     $this->headers[$name] = $value;
     return $this;
   }
@@ -108,24 +91,16 @@ final class Request implements EventInterface {
   public function header(string $name, string $value = '') : static {
     return $this->addHeader($name, $value);
   }
-
-  // 是否结果
   public function end(bool $isEnded = true) : void {
     $this->isEnded = $isEnded;
   }
-
-  // ip地址
   public function ip() : string {
     return $this->server['REMOTE_ADDR'];
   }
-
-  // allow的方法
   public function allowMethods(string ...$methods) : void {
     if (in_array($this->method, $methods)) { return; }
     throw new NotFoundException('request method not support!', 1, 1);
   }
-
-  // 从php环境创建request对象
   public static function fromFpmRequest() : static {
     $request = new static();
     $request->server = $_SERVER;
@@ -141,8 +116,6 @@ final class Request implements EventInterface {
     $request->request = $_REQUEST;
     return $request->fromInit();
   }
-
-  // 从php环境创建request对象
   public static function fromSwooleHttpRequest(\Swoole\Http\Request $req) : static {
     $request = new static();
     $request->req = $req;
@@ -169,27 +142,27 @@ final class Request implements EventInterface {
     $this->json = empty($this->json) && ($this->server['REQUEST_METHOD'] === 'POST' || $this->server['REQUEST_METHOD'] === 'PUT') && str_starts_with($this->server['HTTP_CONTENT_TYPE']??'', 'application/json') ? json_decode($this->getBody(), true) : $this->json;
     return $this;
   }
-
-  // context data
   public string $moduleName = '';
   public string $controllerName = '';
   public string $methodName = '';
   public string $actionName = '';
-
-  // params verify
-  public function requestVerify(string $rules) : array {
-    return Verify::paramsVerify($this->request, 'o{'.$rules.'}');
+  public function dataVerify(array $data, string $rules, int $depth = 1) : array {
+    return Verify::paramsVerify($data, 'o{'.$rules.'}', depth: $depth);
   }
 
-  public function getVerify(string $rules) : array {
-    return Verify::paramsVerify($this->get, 'o{'.$rules.'}');
+  public function requestVerify(string $rules, int $depth = 1) : array {
+    return Verify::paramsVerify($this->request, 'o{'.$rules.'}', depth: $depth);
   }
 
-  public function postVerify(string $rules) : array {
-    return Verify::paramsVerify($this->post, 'o{'.$rules.'}');
+  public function getVerify(string $rules, int $depth = 1) : array {
+    return Verify::paramsVerify($this->get, 'o{'.$rules.'}', depth: $depth);
   }
 
-  public function jsonVerify(string $rules) : array {
-    return Verify::paramsVerify($this->json, 'o{'.$rules.'}');
+  public function postVerify(string $rules, int $depth = 1) : array {
+    return Verify::paramsVerify($this->post, 'o{'.$rules.'}', depth: $depth);
+  }
+
+  public function jsonVerify(string $rules, int $depth = 1) : array {
+    return Verify::paramsVerify($this->json, 'o{'.$rules.'}', depth: $depth);
   }
 }

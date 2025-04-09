@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -18,11 +18,7 @@ trait TreeTrait {
   public int $_tlevel = -1;
 
   public bool $_detach = false;
-
-  // public ?static|false $_tparent = false; // PHP 8.2
-  public ?static $_tparent = null;
-
-  // public ?ArrayList|false $_children = false; // PHP 8.2
+  public ?self $_tparent = null;
   public ?ArrayList $_children = null;
 
   public function getTpks() : array {
@@ -32,7 +28,7 @@ trait TreeTrait {
   public function getTids() : array {
     $ids = [];
     foreach ($this->getTpks() as $pk) {
-      $ids[] = $this->___props[$pk];
+      array_push($ids, $this->___props[$pk]);
     }
     return $ids;
   }
@@ -44,16 +40,16 @@ trait TreeTrait {
   public function getTpids() : array {
     $pids = [];
     foreach ($this->getTfks() as $fk) {
-      $pids[] = $this->___props[$fk];
+      array_push($pids, $this->___props[$fk]);
     }
     return $pids;
   }
 
-  public function isNode(?ModelTreeInterface $node) : bool {
+  public function isNode(?TreeInterface $node) : bool {
     return $node !== null && $this->getTids() === $node->getTids();
   }
 
-  public function setParent(?ModelTreeInterface $parent) : ModelTreeInterface {
+  public function setParent(?TreeInterface $parent) : TreeInterface {
     $this->_tparent = $parent; return $this;
   }
 
@@ -72,7 +68,7 @@ trait TreeTrait {
     return $sql;
   }
 
-  public function getParent(string ...$columns) : ?ModelTreeInterface {
+  public function getParent(string ...$columns) : ?TreeInterface {
     if ($this->_tparent !== false) {
       return $this->_tparent;
     } elseif ($this->tempty($this->getTpids())) {
@@ -84,7 +80,7 @@ trait TreeTrait {
     }
   }
 
-  public function isParent(?ModelTreeInterface $parent) : bool {
+  public function isParent(?TreeInterface $parent) : bool {
     return $parent !== null && $this->getTpids() === $parent->getTids();
   }
 
@@ -97,7 +93,7 @@ trait TreeTrait {
     return $parents;
   }
 
-  public function isParents(?ModelTreeInterface $parent, int $distance = PHP_INT_MAX) : bool {
+  public function isParents(?TreeInterface $parent, int $distance = PHP_INT_MAX) : bool {
     for ($i = 0, $p = $this->getParent(); $i < $distance && $p !== null; $i++) {
       if ($p->isNode($parent)) { return true; }
       $p = $p->getParent();
@@ -105,11 +101,11 @@ trait TreeTrait {
     return false;
   }
 
-  public function setChildren(ModelTreeInterface ...$children) : ModelTreeInterface {
+  public function setChildren(TreeInterface ...$children) : TreeInterface {
     $this->_children === new ArrayList($children); return $this;
   }
 
-  public function appendChild(ModelTreeInterface ...$children) : ModelTreeInterface {
+  public function appendChild(TreeInterface ...$children) : TreeInterface {
     $this->getChildren()->push(...$children); return $this;
   }
 
@@ -141,7 +137,7 @@ trait TreeTrait {
     return $count;
   }
 
-  public function isDescendants(ModelTreeInterface $node, bool $self = false, int $distance = PHP_INT_MAX) : bool {
+  public function isDescendants(TreeInterface $node, bool $self = false, int $distance = PHP_INT_MAX) : bool {
     --$distance;
     if ($self && $this->isNode($node)) { return true; }
     foreach ($this->getChildren() as $c) {
@@ -172,7 +168,7 @@ trait TreeTrait {
     return $count;
   }
 
-  public function each(Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : ModelTreeInterface {
+  public function each(Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : TreeInterface {
     --$distance;
     if ($self) { $func($this); }
     foreach ($this->getChildren() as $c) {
@@ -182,7 +178,7 @@ trait TreeTrait {
     return $this;
   }
 
-  public function eachReverse(Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : ModelTreeInterface {
+  public function eachReverse(Closure $func, bool $self = false, int $distance = PHP_INT_MAX) : TreeInterface {
     --$distance;
     foreach ($this->getChildren()->reverse() as $c) {
       if ($distance !== 0) { $c->eachReverse($func, false, $distance); }
@@ -196,16 +192,16 @@ trait TreeTrait {
     --$distance;
     $children = [];
     foreach ($this->getChildren() as $c) {
-      $children[] = $func($c, $distance !== 0 ? $c->map($func, false, $distance) : []);
+      array_push($children, $func($c, $distance !== 0 ? $c->map($func, false, $distance) : []));
     }
     return $self ? $func($this, $children) : $children;
   }
 
-  public static function getTree(ArrayList $list = null) : ModelTreeInterface {
+  public static function getTree(ArrayList $list = null) : TreeInterface {
     return static::root()->parseTree($list ?? static::order('`ord` DESC')->selectAll());
   }
 
-  public function parseTree(?ArrayList $list, $detach = true) : ModelTreeInterface {
+  public function parseTree(?ArrayList $list, $detach = true) : TreeInterface {
     $this->_tparent = null;
     $this->_children = new ArrayList();
     $this->_list = new ArrayList();
@@ -224,7 +220,7 @@ trait TreeTrait {
     return $root->parseLevel()->detach($detach);
   }
 
-  public function showChildren() : ModelTreeInterface {
+  public function showChildren() : TreeInterface {
     $this->___props['children'] = $this->_children;
     foreach ($this->_children as $c) {
       $c->showChildren();
@@ -232,19 +228,19 @@ trait TreeTrait {
     return $this;
   }
 
-  public function parseLevel() : ModelTreeInterface {
+  public function parseLevel() : TreeInterface {
     return $this->each(fn($v) => $v->_tlevel = $v->getParent()->_tlevel + 1);
   }
 
-  public function findTree(Closure $func, $defval = null) : ?ModelTreeInterface {
+  public function findTree(Closure $func, $defval = null) : ?TreeInterface {
     return $this->_list->find($func, $defval);
   }
 
-  public function findNode(int $id, $defval = null) : ModelTreeInterface {
+  public function findNode(int $id, $defval = null) : TreeInterface {
     return $this->_list->find(fn($v) => $v->getTids()[0] === $id, $defval);
   }
 
-  public function detach(bool $detach = true) : ModelTreeInterface {
+  public function detach(bool $detach = true) : TreeInterface {
     $this->_detach = $detach;
     $this->getChildren()->each(fn($v) => $v->setParent($detach ? null : $this));
     return $this;
@@ -267,14 +263,14 @@ trait TreeTrait {
     $this->ignoreChange()->parseTree($data['_list'], $data['_detach']);
   }
 
-  public function addRoot(array $top = []) : ModelTreeInterface {
+  public function addRoot(array $top = []) : TreeInterface {
     $node = static::new(array_merge($top, ['id' => 0, 'pid' => -1, 'name' => 'ROOT']));
     $this->list->unshift($node);
     $this->getChildren()->unshift($node);
     return $this;
   }
 
-  public static function root(array $root = []) : ModelTreeInterface {
+  public static function root(array $root = []) : TreeInterface {
     return static::new(array_merge($root, ['id' => 0, 'pid' => -1, 'name' => 'ROOT']));
   }
 }

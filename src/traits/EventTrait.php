@@ -1,5 +1,5 @@
 <?php
-// Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved.
+/* Copyright 2021 The dotcoo <dotcoo@163.com>. All rights reserved. */
 
 declare(strict_types=1);
 
@@ -12,17 +12,17 @@ trait EventTrait {
 
   public static function addClassEventListener(string $name, Closure $handle) : void {
     if (!array_key_exists($name, static::$___classEvents)) { static::$___classEvents[$name] = []; }
-    static::$___classEvents[$name][] = $handle;
+    array_push(static::$___classEvents[$name], $handle);
   }
 
   public static function removeClassEventListener(string $name, Closure $handle) : void {
     if (!array_key_exists($name, static::$___classEvents)) { return; }
-    static::$___classEvents[$name] = array_filter(fn($v) => $v !== $handle, static::$___classEvents[$name]);
+    static::$___classEvents[$name] = array_filter(static::$___classEvents[$name], fn($v) => $v !== $handle);
   }
 
   public static function dispatchClassEvent(string $name, mixed ...$args) : void {
     $eventMethodName = 'on' . camel2pascal($name);
-    if (method_exists($this, $eventMethodName)) {
+    if (method_exists(self::class, $eventMethodName)) {
       static::$eventMethodName(...$args);
     }
     if (array_key_exists($name, static::$___classEvents)) {
@@ -34,13 +34,13 @@ trait EventTrait {
 
   public function addEventListener(string $name, Closure $handle) : static {
     if (!array_key_exists($name, $this->___events)) { $this->___events[$name] = []; }
-    $this->___events[$name][] = $handle;
+    array_push($this->___events[$name], $handle);
     return $this;
   }
 
   public function removeEventListener(string $name, Closure $handle) : static {
     if (!array_key_exists($name, $this->___events)) { return $this; }
-    $this->___events[$name] = array_filter(fn($v) => $v !== $handle, $this->___events[$name]);
+    $this->___events[$name] = array_filter($this->___events[$name], fn($v) => $v !== $handle);
     return $this;
   }
 
